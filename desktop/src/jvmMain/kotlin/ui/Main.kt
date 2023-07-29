@@ -35,7 +35,6 @@ import colorCredit
 import colorDebit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
 import refresh
 
 @Composable
@@ -102,7 +101,7 @@ fun App() {
 
 // whole Vertical plate, is symbol of month:
 @Composable
-fun PlateMonth(saldo: Saldo, indx: Int) {
+fun PlateMonth(saldo: Saldo, indxMonth: Int) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -110,11 +109,18 @@ fun PlateMonth(saldo: Saldo, indx: Int) {
         elevation = 10.dp
     ) {
         Box(Modifier.clickable {  }) {
+            Text("${saldo.month} ${saldo.year}", modifier = Modifier.fillMaxSize().padding(top = (1).dp,start = 0.dp).align(Alignment.TopCenter),
+                fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Light,
+                color = Color.LightGray
+            )
+
             Column(
                 modifier = Modifier.padding(top = 15.dp), horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(Modifier.weight(3f).background(colorDebit)) {
-                    verticalList(saldo.wholeStrokes.filter { it.nature == Nature.DEBIT } as ArrayList<SaldoStroke>, saldo.month, saldo.year, indx, isDebet = true)
+                Row(
+                    Modifier.weight(3f).background(colorDebit))
+                {
+                    verticalList(saldo.wholeStrokes.filter { it.nature == Nature.DEBIT } as ArrayList<SaldoStroke>, saldo.month, saldo.year, indxMonth, isDebet = true)
                 }
                 // SUMMA:
                 Column(Modifier.weight(1f).background(Color.White), verticalArrangement = Arrangement.Center) {
@@ -134,20 +140,17 @@ fun PlateMonth(saldo: Saldo, indx: Int) {
                 Row(
                     Modifier.weight(3f).background(colorCredit)
                 ) {
-                    verticalList(saldo.wholeStrokes.filter { it.nature == Nature.CREDIT } as ArrayList<SaldoStroke>, saldo.month, saldo.year, indx, false)
+                    verticalList(saldo.wholeStrokes.filter { it.nature == Nature.CREDIT } as ArrayList<SaldoStroke>, saldo.month, saldo.year, indxMonth, false)
                 }
             }
-            Text("${saldo.month} ${saldo.year}", modifier = Modifier.fillMaxSize().padding(top = (1).dp,start = 0.dp).align(Alignment.TopCenter),
-                fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Light,
-                color = Color.LightGray
-            )
+
         }
 
     }
 }
 
 @Composable
-fun verticalList(statement: ArrayList<SaldoStroke>, month: Int, year: Int, indx: Int, isDebet: Boolean) {
+fun verticalList(statement: ArrayList<SaldoStroke>, month: Int, year: Int, indxMonth: Int, isDebet: Boolean) {
     val ctx = CoroutineScope(Dispatchers.Default)
 
     val rud = remember { mutableStateListOf<SaldoStroke>() }
@@ -159,9 +162,9 @@ fun verticalList(statement: ArrayList<SaldoStroke>, month: Int, year: Int, indx:
     LazyColumn(modifier = Modifier.width(90.dp).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
         var bItem: SaldoStroke? = null
 
-        itemsIndexed(items = rud, itemContent = { indx, item ->
+        itemsIndexed(items = rud, itemContent = { indxStroke, item ->
             bItem = item
-            strokeOfSaldo(item, month, year)
+            strokeOfSaldo(item, month, year, indxStroke,indxMonth)
         })
         // circle "plus" for add new stroke of Saldo
         item {
@@ -177,7 +180,7 @@ fun verticalList(statement: ArrayList<SaldoStroke>, month: Int, year: Int, indx:
 }
 
 @Composable
-fun strokeOfSaldo(saldoStrokeIn: SaldoStroke, month: Int, year: Int) {
+fun strokeOfSaldo(saldoStrokeIn: SaldoStroke, month: Int, year: Int, indxStroke: Int, indxMonth: Int) {
     //val isEdit = remember { saldoState }
     val isEditLocal = remember { mutableStateOf(saldoStrokeIn.isEdit && saldoState.value.saldoAction == SaldoAction.EDITING) }
     var saldoStroke = remember { mutableStateOf(saldoStrokeIn) }
@@ -207,7 +210,7 @@ fun strokeOfSaldo(saldoStrokeIn: SaldoStroke, month: Int, year: Int) {
                     value = saldoStrokeAmount,
                     onValueChange = {
                         saldoStrokeAmount = it
-                        _currentBudget.value[0].wholeStrokes[0].amount = saldoStrokeAmount.toIntOrNull()?: 0
+                        _currentBudget.value[indxMonth].wholeStrokes[indxStroke].amount = saldoStrokeAmount.toIntOrNull()?: 0
 
                         if (it.isNotEmpty() && it.isNotBlank()) {
 
@@ -229,7 +232,7 @@ fun strokeOfSaldo(saldoStrokeIn: SaldoStroke, month: Int, year: Int) {
                 }
             }
         } else {
-            Text(text = "${saldoStroke.value.amount} rub", style = MaterialTheme.typography.body1, modifier = Modifier.padding(0.dp))
+            Text(text = "${saldoStrokeAmount} rub", style = MaterialTheme.typography.body1, modifier = Modifier.padding(0.dp))
 
             //isEditLocal.value = false
         }
