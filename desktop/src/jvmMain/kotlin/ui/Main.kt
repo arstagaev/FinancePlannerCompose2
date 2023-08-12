@@ -105,8 +105,19 @@ fun App() {
 fun PlateMonth(saldo: Saldo, indxMonth: Int) {
 
 
-    var income = mutableStateOf(0)
-    var expense = mutableStateOf(0)
+    var income = remember { mutableStateOf(0) }
+    var expense = remember { mutableStateOf(0) }
+
+    var incList = mutableListOf<Int>()
+    var expList = mutableListOf<Int>()
+    _itemBudget[indxMonth].filter { it != null && it > 0 }.forEach {
+        incList.add(it?:0)
+    }
+    income.value = incList.sum()
+    _itemBudget[indxMonth].filter { it != null && it < 0 }.forEach {
+        expList.add(it?:0)
+    }
+    expense.value = expList.sum()
    // var saldoRefresh: Saldo = saldo
     LaunchedEffect(saldoState.value) {
 //        _itemBudget[indxMonth].forEach { i ->
@@ -119,7 +130,14 @@ fun PlateMonth(saldo: Saldo, indxMonth: Int) {
 //            }
 //        }
 
-        //saldoRefresh = _itemBudget[indxMonth]
+//        _itemBudget[indxMonth].filter { it != null && it > 0 }.forEach {
+//            incList.add(it?:0)
+//        }
+//        income.value = incList.sum()
+//        _itemBudget[indxMonth].filter { it != null && it < 0 }.forEach {
+//            expList.add(it?:0)
+//        }
+//        expense.value = expList.sum()
     }
     Card(
         modifier = Modifier
@@ -139,7 +157,7 @@ fun PlateMonth(saldo: Saldo, indxMonth: Int) {
                 Row(
                     Modifier.weight(3f).background(colorDebit))
                 {
-                    verticalList(_itemBudget[indxMonth].filter { it != null && it > 0 }, saldo.month, saldo.year, indxMonth = indxMonth, isDebet = true)
+                    verticalList(incList, saldo.month, saldo.year, indxMonth = indxMonth, isDebet = true)
                 }
                 // SUMMA:
                 Column(Modifier.weight(1f).background(Color.White), verticalArrangement = Arrangement.Center) {
@@ -159,7 +177,7 @@ fun PlateMonth(saldo: Saldo, indxMonth: Int) {
                 Row(
                     Modifier.weight(3f).background(colorCredit)
                 ) {
-                    verticalList(_itemBudget[indxMonth].filter { it != null && it < 0 }, saldo.month, saldo.year, indxMonth, false)
+                    verticalList(expList, saldo.month, saldo.year, indxMonth, false)
                 }
             }
         }
@@ -225,30 +243,36 @@ fun strokeOfSaldo(saldoStrokeIn: Int, month: Int, year: Int, indxStroke: Int, in
     //var saldoStroke = remember { mutableStateOf(saldoStrokeIn) }
     var saldoStrokeAmount by remember { mutableStateOf("") }
 
-    LaunchedEffect(isEditLocal.value, isShowRemoveIcon.value) {
+    LaunchedEffect(saldoState.value, isShowRemoveIcon.value) {
         if (saldoState.value.saldoAction != SaldoAction.EDITING) {
             isEditLocal.value = false
         }
         saldoStrokeAmount = saldoStrokeIn.toString()
         //println("<>>>>pizdec "+_itemBudget[indxMonth].joinToString())
     }
-    Box(Modifier.fillMaxWidth()
-        .onPointerEvent(PointerEventType.Enter) {
+
+    Box(Modifier.fillMaxWidth().clickable {
+        ctx.launch {
+            saldoState.value = saldoState.value.copy(saldoAction = SaldoAction.EDITING)
+            //delay(100)
+            isEditLocal.value = true
+            println("<>>> ${saldoState.value.toString()}  ${isEditLocal.value}")
+        }
+
+        //cancelEdits.value = true
+    }.onPointerEvent(PointerEventType.Enter) {
             val position = it.changes.first().position
             //println("posss ${position.toString()}")
             isShowRemoveIcon.value = true
-        }.onPointerEvent(PointerEventType.Exit) {
+    }.onPointerEvent(PointerEventType.Exit) {
             val position = it.changes.first().position
             //println("posss ${position.toString()}")
             isShowRemoveIcon.value = false
-    }) {
-        Column(Modifier.fillMaxWidth().clickable {
-            saldoState.value = saldoState.value.copy(saldoAction = SaldoAction.EDITING)
-            isEditLocal.value = true
-            println("<>>> ${saldoState.value.toString()}  ${isEditLocal.value}")
-            //cancelEdits.value = true
-        }) {
-            if (isEditLocal.value && saldoState.value.saldoAction == SaldoAction.EDITING) {
+    }
+    ) {
+        Column(Modifier.fillMaxSize()) {
+            //Text("${isEditLocal.value}")
+            if (isEditLocal.value) {
                 Column(Modifier.fillMaxWidth().height(160.dp).background(Color.Red)) {
                     BasicTextField(
 //                colors = BasicTextField.textFieldColors(
@@ -273,42 +297,6 @@ fun strokeOfSaldo(saldoStrokeIn: Int, month: Int, year: Int, indxStroke: Int, in
                             }
                     ) {
                         Text("repeat in feature ->", modifier = Modifier.padding(vertical = 5.dp),
-                            fontFamily = FontFamily.Default, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
-                            color = Color.Blue
-                        )
-                    }
-                    Box(
-                        modifier = Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(20.dp))
-                            //.background(if (saldoStroke.value.isConst) Color.Cyan else Color.Yellow)
-                            .clickable {
-                                //saldoStroke.value = saldoStroke.value.copy(isConst = !saldoStroke.value.isConst)
-                                _itemBudget.safeDelete(indxMonth,value = saldoStrokeAmount.toInt(),andFuture = false)
-                                //_itemBudget[0].remove(saldoStrokeAmount.toInt())//.safeDelete(indxMonth,value = saldoStrokeAmount.toInt(),andFuture = false)
-                                ctx.launch {
-
-
-//                                currentBudgetX.emit(currentBudgetX.value.safeDelete(indxMonth,value = saldoStrokeAmount.toInt(),andFuture = false))
-
-                                }
-                                //refresh(saldoStrokeIn.copy(amount = 222), month, year)
-                            }
-                    ) {
-                        Text("delete in cell ->", modifier = Modifier.padding(vertical = 5.dp),
-                            fontFamily = FontFamily.Default, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
-                            color = Color.Blue
-                        )
-                    }
-                    Box(
-                        modifier = Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(20.dp))
-                            //.background(if (saldoStroke.value.isConst) Color.Cyan else Color.Yellow)
-                            .clickable {
-                                //saldoStroke.value = saldoStroke.value.copy(isConst = !saldoStroke.value.isConst)
-
-                                _itemBudget.safeDelete(indxMonth,indxStroke,andFuture = true)
-                                //refresh(saldoStrokeIn.copy(amount = 222), month, year)
-                            }
-                    ) {
-                        Text("delete in future ->", modifier = Modifier.padding(vertical = 5.dp),
                             fontFamily = FontFamily.Default, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
                             color = Color.Blue
                         )
