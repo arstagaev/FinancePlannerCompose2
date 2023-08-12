@@ -5,6 +5,7 @@ import Consts.currentBudget
 import Consts.saldoState
 import Saldo
 import SaldoAction
+import SaldoState
 import SaldoStroke
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.desktop.ui.tooling.preview.Preview
@@ -21,9 +22,13 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -36,42 +41,25 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import colorCredit
 import colorDebit
+import core.*
 import core.CalcModule2.currentBudgetOUT
 import core.CalcModule2.currentBudgetX
-import core.prep
-import core.safeDelete
-import core.safeInserting
-import core.safeUpdate
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import refresh
 
 @Composable
-@Preview
 fun App() {
 
     MaterialTheme {
 
         // val curBud = currentBudget.collectAsState()
         // val ctx = CoroutineScope(Dispatchers.Default)
-        val resd = currentBudgetX.collectAsState() //remember { prep(currentBudgetX.value) }
-        //val people: State<ArrayList<ArrayList<Int?>>> = currentBudgetX.collectAsState()
+        //var resd = currentBudgetX.value //remember { prep(currentBudgetX.value) }
 
-        LaunchedEffect(resd) {
-            //resd = prep(currentBudgetX.value)
-//            currentBudgetX.collect {r ->
-//                // fill whole budget by months
-//
-//                prep(currentBudgetX.value).forEach {
-//                    resd.add(it)
-//                }
-//
-//            }
-            currentBudgetX.collect {
-                println("REFRESH")
-            }
+        LaunchedEffect(saldoState.value) {
 
+            println("REFRESH")
+            //resd = currentBudgetX.value
         }
 
         Column {
@@ -83,9 +71,6 @@ fun App() {
                 Row(Modifier.fillMaxWidth().height(50.dp).background(Color.Red).clickable {
                     saldoState.value = saldoState.value.copy(saldoAction = SaldoAction.SHOW)
 
-                    val a = _currentBudget.value
-                    val b = _currentBudget.value
-                    _currentBudget.value = b
 
                 }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -97,7 +82,7 @@ fun App() {
             }
 
             LazyRow(modifier = Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
-                itemsIndexed(items = prep(resd.value), itemContent = {indx, item ->
+                itemsIndexed(items = prep(itemBudget), itemContent = { indx, item ->
                     PlateMonth(item,indx)
                 })
                 // circle "plus" for add new month:
@@ -112,18 +97,29 @@ fun App() {
                 }
             }
         }
-
     }
 }
 
 // whole Vertical plate, is symbol of month:
 @Composable
 fun PlateMonth(saldo: Saldo, indxMonth: Int) {
-    var income = saldo.wholeStrokes.filter { it.amount > 0 }.sumOf { it.amount }
-    var expense = saldo.wholeStrokes.filter { it.amount < 0 }.sumOf { it.amount }
-    LaunchedEffect(saldo) {
-        income = saldo.wholeStrokes.filter { it.amount > 0 }.sumOf { it.amount }
-        expense = saldo.wholeStrokes.filter { it.amount < 0 }.sumOf { it.amount }
+
+
+    var income = mutableStateOf(0)
+    var expense = mutableStateOf(0)
+   // var saldoRefresh: Saldo = saldo
+    LaunchedEffect(saldoState.value) {
+//        _itemBudget[indxMonth].forEach { i ->
+//            if (i != null) {
+//                if ( i > 0) {
+//                    income.value =+ i
+//                } else {
+//                    expense.value =+ i
+//                }
+//            }
+//        }
+
+        //saldoRefresh = _itemBudget[indxMonth]
     }
     Card(
         modifier = Modifier
@@ -143,19 +139,19 @@ fun PlateMonth(saldo: Saldo, indxMonth: Int) {
                 Row(
                     Modifier.weight(3f).background(colorDebit))
                 {
-                    verticalList(saldo.wholeStrokes.filter { it.nature == Nature.DEBIT } as ArrayList<SaldoStroke>, saldo.month, saldo.year, indxMonth, isDebet = true)
+                    verticalList(_itemBudget[indxMonth].filter { it != null && it > 0 }, saldo.month, saldo.year, indxMonth = indxMonth, isDebet = true)
                 }
                 // SUMMA:
                 Column(Modifier.weight(1f).background(Color.White), verticalArrangement = Arrangement.Center) {
-                    Text("${income}", modifier = Modifier.padding(vertical = 2.dp),
+                    Text("${income.value}", modifier = Modifier.padding(vertical = 2.dp),
                         fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
                         color = Color.Green
                     )
-                    Text("${income+expense}", modifier = Modifier.padding(vertical = 5.dp),
+                    Text("${income.value+expense.value}", modifier = Modifier.padding(vertical = 5.dp),
                         fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
                         color = Color.Blue
                     )
-                    Text("${expense}", modifier = Modifier.padding(vertical = 2.dp),
+                    Text("${expense.value}", modifier = Modifier.padding(vertical = 2.dp),
                         fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
                         color = Color.Red
                     )
@@ -163,31 +159,37 @@ fun PlateMonth(saldo: Saldo, indxMonth: Int) {
                 Row(
                     Modifier.weight(3f).background(colorCredit)
                 ) {
-                    verticalList(saldo.wholeStrokes.filter { it.nature == Nature.CREDIT } as ArrayList<SaldoStroke>, saldo.month, saldo.year, indxMonth, false)
+                    verticalList(_itemBudget[indxMonth].filter { it != null && it < 0 }, saldo.month, saldo.year, indxMonth, false)
                 }
             }
-
         }
-
     }
 }
 
 @Composable
-fun verticalList(statement: ArrayList<SaldoStroke>, month: Int, year: Int, indxMonth: Int, isDebet: Boolean) {
+fun verticalList(statement: List<Int?>, month: Int, year: Int, indxMonth: Int, isDebet: Boolean) {
     val ctx = CoroutineScope(Dispatchers.Default)
 
-    val rud = remember { mutableStateListOf<SaldoStroke>() }
-    LaunchedEffect(statement) {
-        statement.forEach {
-            rud.add(it)
+    var rud = mutableStateListOf<Int>()
+    LaunchedEffect(saldoState.value, itemBudget[indxMonth].size) {
+        //rud.addAll(_itemBudget[indxMonth].filter { it != null && it < 0 })
+        //rud.clear()
+
+        itemBudget[indxMonth].forEach {
+            if (it!=null ) {
+                if (isDebet && it > 0 ) {
+                    rud.add(it?:0)
+                } else if (!isDebet && it < 0) {
+                    rud.add(it?:0)
+                }
+            }
         }
+        //println("Pipecccc ${statement.joinToString()}")
     }
     LazyColumn(modifier = Modifier.width(90.dp).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
-        var bItem: SaldoStroke? = null
 
         itemsIndexed(items = rud, itemContent = { indxStroke, item ->
-            bItem = item
-            strokeOfSaldo(item, month, year, indxStroke,indxMonth)
+            strokeOfSaldo(item?:0, month, year, indxStroke,indxMonth)
         })
         // circle "plus" for add new stroke of Saldo
         item {
@@ -202,102 +204,156 @@ fun verticalList(statement: ArrayList<SaldoStroke>, month: Int, year: Int, indxM
     }
 }
 
+private fun SaldoState.invalidate() {
+    GlobalScope.launch {
+        saldoState.value = SaldoState(SaldoAction.EDITING)
+        delay(500)
+        saldoState.value = SaldoState(SaldoAction.SHOW)
+    }
+
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun strokeOfSaldo(saldoStrokeIn: SaldoStroke, month: Int, year: Int, indxStroke: Int, indxMonth: Int) {
+fun strokeOfSaldo(saldoStrokeIn: Int, month: Int, year: Int, indxStroke: Int, indxMonth: Int) {
     //val isEdit = remember { saldoState }
     val ctx = CoroutineScope(Dispatchers.Default)
-    val isEditLocal = remember { mutableStateOf(saldoStrokeIn.isEdit && saldoState.value.saldoAction == SaldoAction.EDITING) }
-    var saldoStroke = remember { mutableStateOf(saldoStrokeIn) }
-    var saldoStrokeAmount by remember { mutableStateOf("${saldoStrokeIn.amount}") }
+    val isEditLocal = remember { mutableStateOf(false) }
+    val isShowRemoveIcon = remember { mutableStateOf(false) }
+    //val isEditLocalCommmon = remember { mutableStateOf(isEditLocal.value && saldoState.value.saldoAction == SaldoAction.EDITING) }
 
-    LaunchedEffect(saldoState.value, saldoStrokeIn.amount) {
+    //var saldoStroke = remember { mutableStateOf(saldoStrokeIn) }
+    var saldoStrokeAmount by remember { mutableStateOf("") }
+
+    LaunchedEffect(isEditLocal.value, isShowRemoveIcon.value) {
         if (saldoState.value.saldoAction != SaldoAction.EDITING) {
             isEditLocal.value = false
         }
-        saldoStrokeAmount = saldoStrokeIn.amount.toString()
-        //println("<>>>>"+saldoStroke.value.toString())
+        saldoStrokeAmount = saldoStrokeIn.toString()
+        //println("<>>>>pizdec "+_itemBudget[indxMonth].joinToString())
     }
-
-    Column(Modifier.fillMaxWidth().clickable {
-        saldoState.value = saldoState.value.copy(saldoAction = SaldoAction.EDITING)
-        isEditLocal.value = true
-        println("<>>> ${saldoState.value.toString()}  ${isEditLocal.value}")
-        //cancelEdits.value = true
+    Box(Modifier.fillMaxWidth()
+        .onPointerEvent(PointerEventType.Enter) {
+            val position = it.changes.first().position
+            //println("posss ${position.toString()}")
+            isShowRemoveIcon.value = true
+        }.onPointerEvent(PointerEventType.Exit) {
+            val position = it.changes.first().position
+            //println("posss ${position.toString()}")
+            isShowRemoveIcon.value = false
     }) {
-        if (isEditLocal.value && saldoState.value.saldoAction == SaldoAction.EDITING) {
-            Column(Modifier.fillMaxWidth().height(160.dp).background(Color.Red)) {
-                BasicTextField(
+        Column(Modifier.fillMaxWidth().clickable {
+            saldoState.value = saldoState.value.copy(saldoAction = SaldoAction.EDITING)
+            isEditLocal.value = true
+            println("<>>> ${saldoState.value.toString()}  ${isEditLocal.value}")
+            //cancelEdits.value = true
+        }) {
+            if (isEditLocal.value && saldoState.value.saldoAction == SaldoAction.EDITING) {
+                Column(Modifier.fillMaxWidth().height(160.dp).background(Color.Red)) {
+                    BasicTextField(
 //                colors = BasicTextField.textFieldColors(
 //                backgroundColor = Color.White,
 //                focusedIndicatorColor =  Color.Transparent, //hide the indicator
 //                unfocusedIndicatorColor = Color.Green),
-                    modifier = Modifier.fillMaxWidth().height(40.dp).background(Color.Magenta),
-                    value = saldoStrokeAmount,
-                    onValueChange = {
-                        saldoStrokeAmount = it
-                        currentBudgetX.value.safeUpdate(indxMonth,indxStroke,saldoStrokeAmount.toInt())
-                        println("->>${currentBudgetX.value.joinToString()}")
-                    },
-                    textStyle = TextStyle.Default.copy(fontSize = 15.sp)
-                )
-                Box(
-                    modifier = Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(20.dp))
-                        .background(if (saldoStroke.value.isConst) Color.Cyan else Color.Yellow)
-                        .clickable {
-                            saldoStroke.value = saldoStroke.value.copy(isConst = !saldoStroke.value.isConst)
-                            currentBudgetX.value.safeUpdate(indxMonth,indxStroke,saldoStrokeAmount.toInt(),isConst = true)
-                        }
-                ) {
-                    Text("repeat in feature ->", modifier = Modifier.padding(vertical = 5.dp),
-                        fontFamily = FontFamily.Default, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
-                        color = Color.Blue
+                        modifier = Modifier.fillMaxWidth().height(40.dp).background(Color.Magenta),
+                        value = saldoStrokeAmount,
+                        onValueChange = {
+                            saldoStrokeAmount = it
+                            currentBudgetX.value.safeUpdate(indxMonth,indxStroke,saldoStrokeAmount.toInt())
+                            println("->>${currentBudgetX.value.joinToString()}")
+                        },
+                        textStyle = TextStyle.Default.copy(fontSize = 15.sp)
                     )
-                }
-                Box(
-                    modifier = Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(20.dp))
-                        .background(if (saldoStroke.value.isConst) Color.Cyan else Color.Yellow)
-                        .clickable {
-                            saldoStroke.value = saldoStroke.value.copy(isConst = !saldoStroke.value.isConst)
-                            ctx.launch {
-                                currentBudgetX.safeDelete(indxMonth,value = saldoStrokeAmount.toInt(),andFuture = false)
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(20.dp))
+                            //.background(if (saldoStroke.value.isConst) Color.Cyan else Color.Yellow)
+                            .clickable {
+                                //saldoStroke.value = saldoStroke.value.copy(isConst = !saldoStroke.value.isConst)
+                                currentBudgetX.value.safeUpdate(indxMonth,indxStroke,saldoStrokeAmount.toInt(),isConst = true)
+                            }
+                    ) {
+                        Text("repeat in feature ->", modifier = Modifier.padding(vertical = 5.dp),
+                            fontFamily = FontFamily.Default, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
+                            color = Color.Blue
+                        )
+                    }
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(20.dp))
+                            //.background(if (saldoStroke.value.isConst) Color.Cyan else Color.Yellow)
+                            .clickable {
+                                //saldoStroke.value = saldoStroke.value.copy(isConst = !saldoStroke.value.isConst)
+                                _itemBudget.safeDelete(indxMonth,value = saldoStrokeAmount.toInt(),andFuture = false)
+                                //_itemBudget[0].remove(saldoStrokeAmount.toInt())//.safeDelete(indxMonth,value = saldoStrokeAmount.toInt(),andFuture = false)
+                                ctx.launch {
+
 
 //                                currentBudgetX.emit(currentBudgetX.value.safeDelete(indxMonth,value = saldoStrokeAmount.toInt(),andFuture = false))
 
+                                }
+                                //refresh(saldoStrokeIn.copy(amount = 222), month, year)
                             }
-                            //refresh(saldoStrokeIn.copy(amount = 222), month, year)
-                        }
-                ) {
-                    Text("delete in cell ->", modifier = Modifier.padding(vertical = 5.dp),
-                        fontFamily = FontFamily.Default, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
-                        color = Color.Blue
-                    )
-                }
-                Box(
-                    modifier = Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(20.dp))
-                        .background(if (saldoStroke.value.isConst) Color.Cyan else Color.Yellow)
-                        .clickable {
-                            saldoStroke.value = saldoStroke.value.copy(isConst = !saldoStroke.value.isConst)
+                    ) {
+                        Text("delete in cell ->", modifier = Modifier.padding(vertical = 5.dp),
+                            fontFamily = FontFamily.Default, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
+                            color = Color.Blue
+                        )
+                    }
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(20.dp))
+                            //.background(if (saldoStroke.value.isConst) Color.Cyan else Color.Yellow)
+                            .clickable {
+                                //saldoStroke.value = saldoStroke.value.copy(isConst = !saldoStroke.value.isConst)
 
-                            currentBudgetX.value.safeDelete(indxMonth,indxStroke,andFuture = true)
-                            //refresh(saldoStrokeIn.copy(amount = 222), month, year)
-                        }
-                ) {
-                    Text("delete in future ->", modifier = Modifier.padding(vertical = 5.dp),
-                        fontFamily = FontFamily.Default, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
-                        color = Color.Blue
-                    )
+                                _itemBudget.safeDelete(indxMonth,indxStroke,andFuture = true)
+                                //refresh(saldoStrokeIn.copy(amount = 222), month, year)
+                            }
+                    ) {
+                        Text("delete in future ->", modifier = Modifier.padding(vertical = 5.dp),
+                            fontFamily = FontFamily.Default, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
+                            color = Color.Blue
+                        )
+                    }
                 }
+            } else {
+                Text(text = "${saldoStrokeAmount} rub", style = MaterialTheme.typography.body1, modifier = Modifier.padding(0.dp))
+
+                //isEditLocal.value = false
             }
-        } else {
-            Text(text = "${saldoStrokeAmount} rub", style = MaterialTheme.typography.body1, modifier = Modifier.padding(0.dp))
-
-            //isEditLocal.value = false
         }
+        if (isShowRemoveIcon.value) {
+
+            Box(Modifier.size(30.dp).align(Alignment.CenterEnd).background(Color.Red).clickable {
+                _itemBudget.safeDelete(indxMonth,value = saldoStrokeAmount.toInt(),andFuture = false)
+                saldoState.value.invalidate()
+            })
+        }
+
     }
+
 }
 
 fun main() = application {
     Window(onCloseRequest = ::exitApplication) {
         App()
+        //Test()
+    }
+}
+private val _itemList = mutableStateListOf<String>()
+val itemList: List<String> = _itemList
+@Composable
+fun Test() {
+    MaterialTheme {
+        LaunchedEffect(true) {
+            _itemList.add("Zero")
+            _itemList.add("Zero")
+            _itemList.add("Zero")
+        }
+        LazyColumn(Modifier.fillMaxWidth()) {
+            itemsIndexed(items = itemList, itemContent = { indxStroke, item ->
+                Text(modifier = Modifier.clickable {
+                    _itemList.remove("Zero")
+                }, text = "$item <---", fontSize = 20.sp)
+            })
+        }
     }
 }

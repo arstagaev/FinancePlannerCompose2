@@ -53,7 +53,9 @@ object Consts {
     ))
     val currentBudget: StateFlow<ArrayList<Saldo>> get() =  _currentBudget
 
-    val isEditNow = mutableStateOf(false)
+    //val isEditNow = mutableStateOf(false)
     val saldoState = mutableStateOf<SaldoState>(SaldoState(SaldoAction.SHOW))
+    val actionPerforming = mutableStateOf<SaldoState>(SaldoState(SaldoAction.SHOW))
+
     var indxEdit = 0
 }

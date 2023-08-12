@@ -2,25 +2,28 @@ package core
 
 import Saldo
 import SaldoStroke
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.math.roundToInt
 object CalcModule2 {
-    var currentBudgetX =
-        mutableStateListOf<ArrayList<Int?>>(
-            arrayListOf(10,10,10,10,10,-110),
-            arrayListOf(10,10,10,10,10,10),
-            arrayListOf(-10,-10,-10,10,10,10)
-        )
-
-//    var currentBudgetX = MutableStateFlow(
+//    var currentBudgetX =
 //        mutableStateListOf<ArrayList<Int?>>(
 //            arrayListOf(10,10,10,10,10,-110),
 //            arrayListOf(10,10,10,10,10,10),
 //            arrayListOf(-10,-10,-10,10,10,10)
 //        )
-//    )
+
+    var currentBudgetX = MutableStateFlow(
+        arrayListOf<ArrayList<Int?>>(
+            arrayListOf(10,10,10,10,10,-110),
+            arrayListOf(10,10,10,10,10,10),
+            arrayListOf(-10,-10,-10,10,10,10)
+        )
+    )
     val currentBudgetOUT = 1//: StateFlow<ArrayList<ArrayList<Int?>>> get() =  arrayListOf()//currentBudgetX
 }
 
@@ -32,6 +35,16 @@ var q = arrayListOf<ArrayList<Int?>>(
     arrayListOf(0,0,0,0,0,0),
     arrayListOf(0,0,0,0,0,0)
 )
+
+val _itemBudget = mutableStateListOf<ArrayList<Int?>>(
+    arrayListOf(10,10,10,10,10,-110),
+    arrayListOf(10,10,10,10,10,10),
+    arrayListOf(-10,-10,-10,10,10,10)
+)
+val itemBudget: List<ArrayList<Int?>> = _itemBudget
+
+private val _words = mutableStateOf(emptyList<String>()) // 1
+val words: State<List<String>> = _words                  // 2
 
 fun main() {
     log2()
@@ -99,7 +112,7 @@ fun ArrayList<ArrayList<Int?>>.safeUpdate(y: Int,x: Int,value: Int,isConst: Bool
     log2()
 }
 
-fun ArrayList<ArrayList<Int?>>.safeDelete(y: Int,value: Int, andFuture: Boolean = false): ArrayList<ArrayList<Int?>> {
+fun SnapshotStateList<ArrayList<Int?>>.safeDelete(y: Int,value: Int, andFuture: Boolean = false) {
     log2()
     if (y < this.size) {
         if (this[y].remove(value)) {
@@ -112,13 +125,13 @@ fun ArrayList<ArrayList<Int?>>.safeDelete(y: Int,value: Int, andFuture: Boolean 
                 }
             }
         }
-        return this
+        //return this
         println("safeDelete: ${this.joinToString()}")
     }else {
-        return arrayListOf()
+        //return arrayListOf()
         println("ERROR Y >")
     }
-    return arrayListOf()
+    //return arrayListOf()
     log2()
 }
 
@@ -146,7 +159,7 @@ fun ArrayList<ArrayList<Int?>>.safeDeleteByIndex(y: Int,x: Int, andFuture: Boole
     log2()
 }
 
-fun prep(arr: ArrayList<ArrayList<Int?>>): ArrayList<Saldo> {
+fun prep(arr: List<ArrayList<Int?>>): ArrayList<Saldo> {
     var result = arrayListOf<Saldo>()
     arr.forEachIndexed { index, intArrayList ->
         result.add(arrayToSaldo(intArrayList))
