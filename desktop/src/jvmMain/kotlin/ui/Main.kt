@@ -221,8 +221,7 @@ fun verticalList(statement: List<Int?>, month: Int, year: Int, indxMonth: Int, i
         }
     }
 }
-
-private fun SaldoState.invalidate() {
+ fun SaldoState.invalidate() {
     GlobalScope.launch {
         saldoState.value = SaldoState(SaldoAction.EDITING)
         delay(500)
@@ -330,7 +329,8 @@ fun main() = application {
     Window(onCloseRequest = ::exitApplication) {
         //App()
         //Test()
-        Tester()
+        //Tester()
+        TesterThree()
     }
 }
 private val _itemList = mutableStateListOf<String>()
