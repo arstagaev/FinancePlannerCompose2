@@ -207,7 +207,7 @@ fun verticalList(statement: List<Int?>, month: Int, year: Int, indxMonth: Int, i
     LazyColumn(modifier = Modifier.width(90.dp).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
 
         itemsIndexed(items = rud, itemContent = { indxStroke, item ->
-            strokeOfSaldo(item?:0, month, year, indxStroke,indxMonth)
+            strokeOfSaldo(item?:0, indxStroke, indxMonth)
         })
         // circle "plus" for add new stroke of Saldo
         item {
@@ -233,26 +233,31 @@ private fun SaldoState.invalidate() {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun strokeOfSaldo(saldoStrokeIn: Int, month: Int, year: Int, indxStroke: Int, indxMonth: Int) {
-    //val isEdit = remember { saldoState }
+fun strokeOfSaldo(saldoStrokeIn: Int, indxStroke: Int, indxMonth: Int) {
     val ctx = CoroutineScope(Dispatchers.Default)
-    val isEditLocal = remember { mutableStateOf(false) }
-    val isShowRemoveIcon = remember { mutableStateOf(false) }
-    //val isEditLocalCommmon = remember { mutableStateOf(isEditLocal.value && saldoState.value.saldoAction == SaldoAction.EDITING) }
+    var isEditInternal = false
+    var isEditLocal = remember { mutableStateOf(isEditInternal && saldoState.value.saldoAction == SaldoAction.EDITING) }
 
-    //var saldoStroke = remember { mutableStateOf(saldoStrokeIn) }
-    var saldoStrokeAmount by remember { mutableStateOf("") }
+    val isShowRemoveIcon = remember { mutableStateOf(false) }
+    var saldoStrokeAmount = remember { mutableStateOf(
+        "${currentBudgetX.value[indxMonth][indxStroke]}"
+        //"$saldoStrokeIn"
+    ) }
 
     LaunchedEffect(saldoState.value, isShowRemoveIcon.value) {
         if (saldoState.value.saldoAction != SaldoAction.EDITING) {
             isEditLocal.value = false
+            isEditInternal = false
+        } else {
+
         }
-        saldoStrokeAmount = saldoStrokeIn.toString()
+        //saldoStrokeAmount = saldoStrokeIn.toString()
         //println("<>>>>pizdec "+_itemBudget[indxMonth].joinToString())
     }
 
     Box(Modifier.fillMaxWidth().clickable {
         ctx.launch {
+            isEditInternal = true
             saldoState.value = saldoState.value.copy(saldoAction = SaldoAction.EDITING)
             //delay(100)
             isEditLocal.value = true
@@ -280,11 +285,12 @@ fun strokeOfSaldo(saldoStrokeIn: Int, month: Int, year: Int, indxStroke: Int, in
 //                focusedIndicatorColor =  Color.Transparent, //hide the indicator
 //                unfocusedIndicatorColor = Color.Green),
                         modifier = Modifier.fillMaxWidth().height(40.dp).background(Color.Magenta),
-                        value = saldoStrokeAmount,
+                        value = saldoStrokeAmount.value,
                         onValueChange = {
-                            saldoStrokeAmount = it
-                            currentBudgetX.value.safeUpdate(indxMonth,indxStroke,saldoStrokeAmount.toInt())
-                            println("->>${currentBudgetX.value.joinToString()}")
+                            saldoStrokeAmount.value = it
+                            currentBudgetX.value.safeUpdate(indxMonth,indxStroke,saldoStrokeAmount.value.toInt())
+                            //println("->>${currentBudgetX.value.joinToString()}")
+                            println("stroke ${saldoStrokeAmount.value} ${currentBudgetX.value.joinToString()}")
                         },
                         textStyle = TextStyle.Default.copy(fontSize = 15.sp)
                     )
@@ -293,7 +299,7 @@ fun strokeOfSaldo(saldoStrokeIn: Int, month: Int, year: Int, indxStroke: Int, in
                             //.background(if (saldoStroke.value.isConst) Color.Cyan else Color.Yellow)
                             .clickable {
                                 //saldoStroke.value = saldoStroke.value.copy(isConst = !saldoStroke.value.isConst)
-                                currentBudgetX.value.safeUpdate(indxMonth,indxStroke,saldoStrokeAmount.toInt(),isConst = true)
+                                currentBudgetX.value.safeUpdate(indxMonth,indxStroke,saldoStrokeAmount.value.toInt(),isConst = true)
                             }
                     ) {
                         Text("repeat in feature ->", modifier = Modifier.padding(vertical = 5.dp),
@@ -303,7 +309,7 @@ fun strokeOfSaldo(saldoStrokeIn: Int, month: Int, year: Int, indxStroke: Int, in
                     }
                 }
             } else {
-                Text(text = "${saldoStrokeAmount} rub", style = MaterialTheme.typography.body1, modifier = Modifier.padding(0.dp))
+                Text(text = "${saldoStrokeAmount.value} rub", style = MaterialTheme.typography.body1, modifier = Modifier.padding(0.dp))
 
                 //isEditLocal.value = false
             }
@@ -311,7 +317,7 @@ fun strokeOfSaldo(saldoStrokeIn: Int, month: Int, year: Int, indxStroke: Int, in
         if (isShowRemoveIcon.value) {
 
             Box(Modifier.size(30.dp).align(Alignment.CenterEnd).background(Color.Red).clickable {
-                _itemBudget.safeDelete(indxMonth,value = saldoStrokeAmount.toInt(),andFuture = false)
+                _itemBudget.safeDelete(indxMonth,value = saldoStrokeAmount.value.toInt(),andFuture = false)
                 saldoState.value.invalidate()
             })
         }
@@ -322,8 +328,9 @@ fun strokeOfSaldo(saldoStrokeIn: Int, month: Int, year: Int, indxStroke: Int, in
 
 fun main() = application {
     Window(onCloseRequest = ::exitApplication) {
-        App()
+        //App()
         //Test()
+        Tester()
     }
 }
 private val _itemList = mutableStateListOf<String>()
