@@ -120,24 +120,7 @@ fun PlateMonth(saldo: Saldo, indxMonth: Int) {
     expense.value = expList.sum()
    // var saldoRefresh: Saldo = saldo
     LaunchedEffect(saldoState.value) {
-//        _itemBudget[indxMonth].forEach { i ->
-//            if (i != null) {
-//                if ( i > 0) {
-//                    income.value =+ i
-//                } else {
-//                    expense.value =+ i
-//                }
-//            }
-//        }
 
-//        _itemBudget[indxMonth].filter { it != null && it > 0 }.forEach {
-//            incList.add(it?:0)
-//        }
-//        income.value = incList.sum()
-//        _itemBudget[indxMonth].filter { it != null && it < 0 }.forEach {
-//            expList.add(it?:0)
-//        }
-//        expense.value = expList.sum()
     }
     Card(
         modifier = Modifier

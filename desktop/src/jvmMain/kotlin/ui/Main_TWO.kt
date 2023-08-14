@@ -59,8 +59,8 @@ class ViewState() {
 //        arrayListOf(-10,-10,-10,10,10,10)
 //    )
 
-//    private val _counter = MutableStateFlow(0) // private mutable state flow
-//    val counter = _counter.asStateFlow() // publicly exposed as read-only state flow
+    //    private val _counter = MutableStateFlow(0) // private mutable state flow
+    //    val counter = _counter.asStateFlow() // publicly exposed as read-only state flow
     var majorList = arrayListOf<ArrayList<Int>>(
         arrayListOf(10,10,10,10,10,-110),
         arrayListOf(10,10,10,10,10,10),
@@ -129,8 +129,8 @@ fun Tester() {
 //            arrayListOf(10,10,10,10,10,10),
 //            arrayListOf(-10)
 //        ))
-        //asd = listtt.value[1]
-        //listtt.value = commonList.value
+        //  asd = listtt.value[1]
+        //  listtt.value = commonList.value
     }
     Box(modifier = Modifier.fillMaxWidth().clickable {  }) {
         LazyRow {
