@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -20,16 +21,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import core.CalcModule2
-import core.log2
-import core.safeInserting
-import core.safeUpdate
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
+import colorCredit
+import colorDebit
+import core.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.launch
 
 private val waterFall = MutableSharedFlow<ArrayList<ArrayList<Int>>>()
 var stateHolder = arrayListOf<ArrayList<Int>>(
@@ -164,19 +165,21 @@ fun TesterThree() {
         LazyRow {
             col.value.forEachIndexed { parentIndex, parentItem ->
                 item {
-
-                    Box(Modifier.width(200.dp)
-                        .background(Color.Gray)) {
-                        LazyColumn {
-
-                            parentItem.forEach {
-                                item {
-                                    Turka(num = it, parentIndex = parentIndex)
-
-                                }
-                            }
-                        }
-                    }
+                    PlateMonth(parentItem, parentIndex)
+//                    Box(Modifier.width(200.dp)
+//                        .background(Color.Gray)) {
+//                        LazyColumn {
+//                            items(parentItem, itemContent = {
+//                                Turka(num = it, parentIndex = parentIndex)
+//                            })
+////                            parentItem.forEach {
+////                                item {
+////                                    Turka(num = it, parentIndex = parentIndex)
+////
+////                                }
+////                            }
+//                        }
+//                    }
                 }
             }
 //            itemsIndexed(items = col.value, itemContent = { parentIndex, parentItem ->
@@ -188,7 +191,109 @@ fun TesterThree() {
         }
     }
 }
-@OptIn(ExperimentalComposeUiApi::class)
+
+
+@Composable
+fun PlateMonth(parentItem: ArrayList<Int>, parentIndex: Int) {
+
+
+    var income = remember { mutableStateOf(0) }
+    var expense = remember { mutableStateOf(0) }
+
+    var incList = mutableListOf<Int>()
+    var expList = mutableListOf<Int>()
+
+
+    LaunchedEffect(parentItem, stateHolder) {
+//        stateHolder[parentIndex].filter { it != null && it > 0 }.forEach {
+//            incList.add(it?:0)
+//        }
+        incList = parentItem.filter { it != null && it > 0  }.toMutableList()
+        income.value = incList.sum()
+//        stateHolder[parentIndex].filter { it != null && it < 0 }.forEach {
+//            expList.add(it?:0)
+//        }
+        expList = parentItem.filter { it != null && it < 0  }.toMutableList()
+        expense.value = expList.sum()
+    }
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(5.dp),
+        elevation = 10.dp
+    ) {
+        Box(Modifier.clickable {  }) {
+            Text("${parentItem.size} ${parentIndex}", modifier = Modifier.fillMaxSize().padding(top = (1).dp,start = 0.dp).align(Alignment.TopCenter),
+                fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Light,
+                color = Color.LightGray
+            )
+
+            Column(
+                modifier = Modifier.padding(top = 15.dp), horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    Modifier.weight(3f).background(colorDebit))
+                {
+                    vertL(incList, parentIndex)
+                    //verticalList(incList, saldo.month, saldo.year, indxMonth = indxMonth, isDebet = true)
+                }
+                // SUMMA:
+                Column(Modifier.weight(1f).background(Color.White), verticalArrangement = Arrangement.Center) {
+                    Text("${income.value}", modifier = Modifier.padding(vertical = 2.dp),
+                        fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
+                        color = Color.Green
+                    )
+                    Text("${income.value+expense.value}", modifier = Modifier.padding(vertical = 5.dp),
+                        fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
+                        color = Color.Blue
+                    )
+                    Text("${expense.value}", modifier = Modifier.padding(vertical = 2.dp),
+                        fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
+                        color = Color.Red
+                    )
+                }
+                Row(
+                    Modifier.weight(3f).background(colorCredit)
+                ) {
+                    vertL(expList, indxMonth = parentIndex)
+                    //verticalList(expList, saldo.month, saldo.year, indxMonth, false)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun vertL(statement: List<Int>, indxMonth: Int,) {
+    val ctx = CoroutineScope(Dispatchers.Default)
+
+    var rud = mutableStateListOf<Int>()
+    LaunchedEffect(statement, saldoState.value) {
+        //rud.addAll(_itemBudget[indxMonth].filter { it != null && it < 0 })
+        //rud.clear()
+        rud.addAll(statement)
+
+        //println("Pipecccc ${statement.joinToString()}")
+    }
+    LazyColumn(modifier = Modifier.width(90.dp).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
+
+        itemsIndexed(items = rud, itemContent = { indxStroke, item ->
+            Turka(item?:0, indxMonth)
+        })
+        // circle "plus" for add new stroke of Saldo
+        item {
+            Row(Modifier.width(100.dp).height(40.dp).clickable {
+
+            }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "+", style = MaterialTheme.typography.body1,
+                    modifier = Modifier.padding(10.dp)
+                )
+            }
+        }
+    }
+}
+
+//@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun Turka(num: Int, parentIndex: Int) {
     var isEditing = remember { mutableStateOf(false) }
@@ -196,12 +301,18 @@ fun Turka(num: Int, parentIndex: Int) {
     var saldoStrokeAmount = remember { mutableStateOf("") }
     var actionInsert = remember { actionSave}
 
-    LaunchedEffect(saldoState.value, isShowRemoveIcon.value, actionInsert.value) {
-        if (saldoState.value.saldoAction != SaldoAction.EDITING) {
+    LaunchedEffect(isEditing.value,saldoState.value, isShowRemoveIcon.value, actionInsert.value) {
+        if (saldoState.value.saldoAction == SaldoAction.SHOW) {
 
             isEditing.value = false
         } else {
 
+        }
+
+        if (isEditing.value) {
+            //saldoState.value = saldoState.value.copy(saldoAction = SaldoAction.EDITING)
+        } else {
+            //saldoState.value = saldoState.value.copy(saldoAction = SaldoAction.SHOW)
         }
 
         if (actionInsert.value) {
@@ -210,21 +321,19 @@ fun Turka(num: Int, parentIndex: Int) {
 //            saldoStrokeAmount.value.toIntOrNull()?.let { addNew(parentIndex, it) }
             actionSave.value = false
         }
-        //saldoStrokeAmount = saldoStrokeIn.toString()
-        //println("<>>>>pizdec "+_itemBudget[indxMonth].joinToString())
     }
 
     Box(Modifier//.width(100.dp)
         .background(Color.LightGray)
-        .onPointerEvent(PointerEventType.Enter) {
-            val position = it.changes.first().position
-            //println("posss ${position.toString()}")
-            isShowRemoveIcon.value = true
-        }.onPointerEvent(PointerEventType.Exit) {
-            val position = it.changes.first().position
-            //println("posss ${position.toString()}")
-            isShowRemoveIcon.value = false
-        }
+//        .onPointerEvent(PointerEventType.Enter) {
+//            val position = it.changes.first().position
+//            //println("posss ${position.toString()}")
+//            isShowRemoveIcon.value = true
+//        }.onPointerEvent(PointerEventType.Exit) {
+//            val position = it.changes.first().position
+//            //println("posss ${position.toString()}")
+//            isShowRemoveIcon.value = false
+//        }
     ) {
         if (isEditing.value) {
             Box(Modifier.size(50.dp).background(Color.Magenta).clickable {
@@ -249,8 +358,14 @@ fun Turka(num: Int, parentIndex: Int) {
         } else {
             //println("$it  ${parentItem.joinToString()}")
             Row(Modifier.clickable {
-                saldoState.value = saldoState.value.copy(saldoAction = SaldoAction.EDITING)
-                isEditing.value = true
+                GlobalScope.launch {
+                    isEditing.value = true
+                    delay(100)
+                    saldoState.value = saldoState.value.copy(saldoAction = SaldoAction.EDITING)
+                }
+
+
+
                 //remover(parentIndex, num)
 //                                GlobalScope.launch {
 //                                    waterFall.emit(
