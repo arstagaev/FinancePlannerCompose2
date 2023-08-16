@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Card
@@ -37,14 +36,37 @@ private var stateFall = arrayListOf<ArrayList<Int>>(
     arrayListOf(10,10,10,1,2,3),
     arrayListOf(-10,-10,-10,3,2,1)
 )
+private var resultArray = arrayListOf<ResultSaldo>()
+
 private var isEditMode = mutableStateOf(false)
-private fun update() {
-    GlobalScope.launch {
+
+data class ResultSaldo(val income: Int, val sum: Int, val expense: Int)
+fun updateXXX() {
+    var lastSum = 0
+    stateFall.forEach { month ->
+        var incList = month.filter { it != null && it > 0  }
+        var expList = month.filter { it != null && it < 0  }
+
+        var income = incList.sum()
+        var expense = expList.sum()
+
+        lastSum += income + expense
+
+        resultArray.add(ResultSaldo(income = income,lastSum,expense))
+    }
+
+    GlobalScope.async {
 //        stateFall.forEachIndexed { index, ints ->
 //            stateFall[index].sortDescending()
 //        }
+
+
         waterFall.emit(arrayListOf())
         waterFall.emit(stateFall)
+
+
+
+
         println("update-> ${stateFall.joinToString()}")
     }
 }
@@ -57,7 +79,7 @@ private fun updateStroke(oldValue: Int, newValue: Int?, parentIndex: Int) {
             return@forEachIndexed
         }
     }
-    update()
+    updateXXX()
 }
 
 private fun addNewStroke(newValue: Int?, parentIndex: Int,isConst: Boolean = false) {
@@ -81,7 +103,7 @@ private fun addNewStroke(newValue: Int?, parentIndex: Int,isConst: Boolean = fal
         }
 
     }
-    update()
+    updateXXX()
 }
 
 private fun delete(monthIndex: Int, value: Int, andFuture: Boolean = false) {
@@ -102,20 +124,22 @@ private fun delete(monthIndex: Int, value: Int, andFuture: Boolean = false) {
         //return arrayListOf()
         println("ERROR Y >")
     }
-    update()
+    updateXXX()
 }
 
 @Composable
 fun AppX2() {
+
+
+    LaunchedEffect(true) {
+        println("At start: ${stateFall.joinToString()}")
+        updateXXX()
+        //tester1()
+    }
     val iem = remember { isEditMode }
     val col = waterFall.collectAsState(
         stateFall
     )
-
-    LaunchedEffect(Unit) {
-        println("At start: ${stateFall.joinToString()}")
-        tester1()
-    }
 
     Column(
         Modifier//.fillMaxWidth()
@@ -128,7 +152,7 @@ fun AppX2() {
                 isEditMode.value = false
                 //actionSave.value = true
                 println("refresh-> ${stateFall.joinToString()}")
-                update()
+                updateXXX()
             }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Recalculate", fontSize = 30.sp)
@@ -181,13 +205,14 @@ fun AppX2() {
                                         }
                                     }
                                 }
+
                                 // SUMMA:
                                 Column(Modifier.weight(1f).background(Color.White), verticalArrangement = Arrangement.Center) {
-                                    Text("${income.value}", modifier = Modifier.padding(vertical = 2.dp),
+                                    Text("${resultArray[parentIndex].income}", modifier = Modifier.padding(vertical = 2.dp),
                                         fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
                                         color = Color.Green
                                     )
-                                    Text("${income.value + expense.value}", modifier = Modifier.padding(vertical = 5.dp).clickable {
+                                    Text("${resultArray[parentIndex].sum}", modifier = Modifier.padding(vertical = 5.dp).clickable {
                                         GlobalScope.async {
                                             //waterFall.emit(arrayListOf())
                                             waterFall.emit(arrayListOf())
@@ -197,7 +222,7 @@ fun AppX2() {
                                         fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
                                         color = Color.Blue
                                     )
-                                    Text("${expense.value}", modifier = Modifier.padding(vertical = 2.dp),
+                                    Text("${resultArray[parentIndex].expense}", modifier = Modifier.padding(vertical = 2.dp),
                                         fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
                                         color = Color.Red
                                     )
@@ -352,7 +377,7 @@ private fun tester1() {
                 arrayListOf(11,22,23,(-20..30).random()),
                 arrayListOf(11,32,33,(-30..40).random()),
             )
-            update()
+            updateXXX()
             delay(10)
         }
     }

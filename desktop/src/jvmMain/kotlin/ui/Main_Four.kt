@@ -54,7 +54,7 @@ private fun updateStroke(oldValue: Int, newValue: Int, parentIndex: Int) {
             return@forEachIndexed
         }
     }
-    update()
+    updateXXX()
 }
 
 private fun addNewStroke(newValue: Int, parentIndex: Int,isConst: Boolean = false) {
@@ -74,7 +74,7 @@ private fun addNewStroke(newValue: Int, parentIndex: Int,isConst: Boolean = fals
                 }
             }
         }
-        update()
+        updateXXX()
     }
 }
 
@@ -96,7 +96,7 @@ private fun delete(monthIndex: Int, value: Int, andFuture: Boolean = false) {
         //return arrayListOf()
         println("ERROR Y >")
     }
-    update()
+    updateXXX()
 }
 
 @Composable
@@ -122,7 +122,7 @@ fun AppX() {
                 isEditMode.value = false
                 actionSave.value = true
                 println("refresh-> ${stateFall.joinToString()}")
-                update()
+                updateXXX()
                 //update2()
             }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically
             ) {
@@ -331,7 +331,7 @@ private fun tester1() {
                 arrayListOf(21,22,23,(20..30).random()),
                 arrayListOf(31,32,33,(30..40).random()),
             )
-            update()
+            updateXXX()
             delay(1000)
         }
 

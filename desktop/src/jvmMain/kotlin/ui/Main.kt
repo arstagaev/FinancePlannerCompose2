@@ -50,21 +50,21 @@ fun verticalList(statement: List<Int?>, month: Int, year: Int, indxMonth: Int, i
     val ctx = CoroutineScope(Dispatchers.Default)
 
     var rud = mutableStateListOf<Int>()
-    LaunchedEffect(saldoState.value, itemBudget[indxMonth].size) {
-        //rud.addAll(_itemBudget[indxMonth].filter { it != null && it < 0 })
-        //rud.clear()
-
-        itemBudget[indxMonth].forEach {
-            if (it!=null ) {
-                if (isDebet && it > 0 ) {
-                    rud.add(it?:0)
-                } else if (!isDebet && it < 0) {
-                    rud.add(it?:0)
-                }
-            }
-        }
-        //println("Pipecccc ${statement.joinToString()}")
-    }
+//    LaunchedEffect(saldoState.value, itemBudget[indxMonth].size) {
+//        //rud.addAll(_itemBudget[indxMonth].filter { it != null && it < 0 })
+//        //rud.clear()
+//
+//        itemBudget[indxMonth].forEach {
+//            if (it!=null ) {
+//                if (isDebet && it > 0 ) {
+//                    rud.add(it?:0)
+//                } else if (!isDebet && it < 0) {
+//                    rud.add(it?:0)
+//                }
+//            }
+//        }
+//        //println("Pipecccc ${statement.joinToString()}")
+//    }
     LazyColumn(modifier = Modifier.width(90.dp).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
 
         itemsIndexed(items = rud, itemContent = { indxStroke, item ->
@@ -82,14 +82,14 @@ fun verticalList(statement: List<Int?>, month: Int, year: Int, indxMonth: Int, i
         }
     }
 }
- fun SaldoState.invalidate() {
-    GlobalScope.launch {
-        saldoState.value = SaldoState(SaldoAction.EDITING)
-        delay(500)
-        saldoState.value = SaldoState(SaldoAction.SHOW)
-    }
-
-}
+// fun SaldoState.invalidate() {
+//    GlobalScope.launch {
+//        saldoState.value = SaldoState(SaldoAction.EDITING)
+//        delay(500)
+//        saldoState.value = SaldoState(SaldoAction.SHOW)
+//    }
+//
+//}
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -148,7 +148,7 @@ fun strokeOfSaldo(saldoStrokeIn: Int, indxStroke: Int, indxMonth: Int) {
                         value = saldoStrokeAmount.value,
                         onValueChange = {
                             saldoStrokeAmount.value = it
-                            currentBudgetX.value.safeUpdate(indxMonth,indxStroke,saldoStrokeAmount.value.toInt())
+                            //currentBudgetX.value.safeUpdate(indxMonth,indxStroke,saldoStrokeAmount.value.toInt())
                             //println("->>${currentBudgetX.value.joinToString()}")
                             println("stroke ${saldoStrokeAmount.value} ${currentBudgetX.value.joinToString()}")
                         },
@@ -159,7 +159,7 @@ fun strokeOfSaldo(saldoStrokeIn: Int, indxStroke: Int, indxMonth: Int) {
                             //.background(if (saldoStroke.value.isConst) Color.Cyan else Color.Yellow)
                             .clickable {
                                 //saldoStroke.value = saldoStroke.value.copy(isConst = !saldoStroke.value.isConst)
-                                currentBudgetX.value.safeUpdate(indxMonth,indxStroke,saldoStrokeAmount.value.toInt(),isConst = true)
+                               // currentBudgetX.value.safeUpdate(indxMonth,indxStroke,saldoStrokeAmount.value.toInt(),isConst = true)
                             }
                     ) {
                         Text("repeat in feature ->", modifier = Modifier.padding(vertical = 5.dp),
@@ -177,8 +177,8 @@ fun strokeOfSaldo(saldoStrokeIn: Int, indxStroke: Int, indxMonth: Int) {
         if (isShowRemoveIcon.value) {
 
             Box(Modifier.size(30.dp).align(Alignment.CenterEnd).background(Color.Red).clickable {
-                _itemBudget.safeDelete(indxMonth,value = saldoStrokeAmount.value.toInt(),andFuture = false)
-                saldoState.value.invalidate()
+                //_itemBudget.safeDelete(indxMonth,value = saldoStrokeAmount.value.toInt(),andFuture = false)
+                //saldoState.value.invalidate()
             })
         }
 
@@ -187,11 +187,14 @@ fun strokeOfSaldo(saldoStrokeIn: Int, indxStroke: Int, indxMonth: Int) {
 }
 
 fun main() = application {
+
     Window(onCloseRequest = ::exitApplication) {
+
         //App()
         //Test()
         //Tester()
         //TesterThree()
+        updateXXX()
         AppX2()
     }
 }

@@ -120,7 +120,7 @@ fun TesterThree() {
             Row(Modifier.fillMaxWidth().height(50.dp).background(Color.Red).clickable {
                 saldoState.value = saldoState.value.copy(saldoAction = SaldoAction.SHOW)
                 actionSave.value = true
-                update()
+                updateXXX()
             }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically
             ) {
 //                    Box(Modifier.fillMaxSize().weight(1f).background(Color.Red).clickable {
