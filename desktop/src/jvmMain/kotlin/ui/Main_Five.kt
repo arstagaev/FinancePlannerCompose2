@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Card
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,13 +43,14 @@ private fun update() {
 //        stateFall.forEachIndexed { index, ints ->
 //            stateFall[index].sortDescending()
 //        }
-        //waterFall.emit(arrayListOf())
+        waterFall.emit(arrayListOf())
         waterFall.emit(stateFall)
         println("update-> ${stateFall.joinToString()}")
     }
 }
 
-private fun updateStroke(oldValue: Int, newValue: Int, parentIndex: Int) {
+private fun updateStroke(oldValue: Int, newValue: Int?, parentIndex: Int) {
+    if (newValue == null) return
     stateFall[parentIndex].forEachIndexed { index, i ->
         if (i == oldValue) {
             stateFall[parentIndex][index] = newValue
@@ -58,7 +60,9 @@ private fun updateStroke(oldValue: Int, newValue: Int, parentIndex: Int) {
     update()
 }
 
-private fun addNewStroke(newValue: Int, parentIndex: Int,isConst: Boolean = false) {
+private fun addNewStroke(newValue: Int?, parentIndex: Int,isConst: Boolean = false) {
+    if (newValue == null) return
+
     if (parentIndex >= stateFall.size) {
         var newArrayList = arrayListOf<Int>(newValue)
 
@@ -75,8 +79,9 @@ private fun addNewStroke(newValue: Int, parentIndex: Int,isConst: Boolean = fals
                 }
             }
         }
-        update()
+
     }
+    update()
 }
 
 private fun delete(monthIndex: Int, value: Int, andFuture: Boolean = false) {
@@ -121,7 +126,7 @@ fun AppX2() {
             Row(
                 Modifier.fillMaxWidth().height(50.dp).background(Color.Red).clickable {
                 isEditMode.value = false
-                actionSave.value = true
+                //actionSave.value = true
                 println("refresh-> ${stateFall.joinToString()}")
                 update()
             }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically
@@ -170,6 +175,10 @@ fun AppX2() {
                                             pizdec(num = item, parentIndex, index)
                                             //Text(">${item}")
                                         })
+                                        // circle "plus" for add new stroke of Saldo
+                                        item {
+                                            plusik(isPositive = true, parentIndex = parentIndex)
+                                        }
                                     }
                                 }
                                 // SUMMA:
@@ -197,117 +206,19 @@ fun AppX2() {
                                     Modifier.weight(3f).background(Color.Red)
                                 ) {
                                     LazyColumn {
-                                        itemsIndexed(expList, itemContent = { index, item ->
+                                        itemsIndexed(expList, itemContent = { index, itemStroke ->
                                             //Text(">${item}")
-                                            pizdec(num = item, parentIndex, index)
+                                            pizdec(num = itemStroke, parentIndex, index)
+
                                         })
+                                        // circle "plus" for add new stroke of Saldo
+                                        item {
+                                            plusik(isPositive = false, parentIndex)
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-//                    Box(
-//                        Modifier.width(200.dp)
-//                            .background(Color.Gray)) {
-//                        LazyColumn {
-////                            items(parentItem, itemContent = {
-////
-////                                pzd(it)
-////
-////                            })
-//                            items(parentItem, itemContent = {
-//
-//                                //item {
-//
-//                               //}
-//                            })
-//                        }
-//                    }
-                }
-            }
-
-//            itemsIndexed(items = col.value, itemContent = { parentIndex, parentItem ->
-//                //if (parentItem.size > parentIndex) {
-//
-//                //}
-//
-//            })
-        }
-    }
-}
-
-@Composable
-private fun monthZero(parentItem: ArrayList<Int>, parentIndex: Int) {
-
-    var incList = parentItem.filter { it != null && it > 0  }
-    var expList = parentItem.filter { it != null && it < 0  }
-
-    val income = remember { mutableStateOf(incList.sum()) }
-    val expense = remember { mutableStateOf(expList.sum()) }
-
-    LaunchedEffect(isEditMode.value) {
-        //incList = ArrayList(parentItem.filter { it != null && it > 0  })
-//        income.value =
-//
-//        //expList = ArrayList(parentItem.filter { it != null && it < 0  })
-//        expense.value = expList.sum()
-        income.value = incList.sum()
-        expense.value = expList.sum()
-    }
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(5.dp),
-        elevation = 10.dp
-    ) {
-        Box(Modifier.clickable {  }) {
-            Text("${parentItem.size} ${parentIndex}", modifier = Modifier.fillMaxSize().padding(top = (1).dp,start = 0.dp).align(Alignment.TopCenter),
-                fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Light,
-                color = Color.LightGray
-            )
-
-            Column(
-                modifier = Modifier.padding(top = 15.dp), horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(
-                    Modifier.weight(3f).background(Color.Green))
-                {
-                    LazyColumn {
-                        itemsIndexed(incList, itemContent = { index, item ->
-                            pizdec(num = item, parentIndex, index)
-                        })
-                    }
-                    //vertL(parentItem.filter { it > 0 }, parentIndex)
-                    //verticalList(incList, saldo.month, saldo.year, indxMonth = indxMonth, isDebet = true)
-                }
-                // SUMMA:
-                Column(Modifier.weight(1f).background(Color.White), verticalArrangement = Arrangement.Center) {
-                    Text("${income.value}", modifier = Modifier.padding(vertical = 2.dp),
-                        fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
-                        color = Color.Green
-                    )
-                    Text("${income.value + expense.value}", modifier = Modifier.padding(vertical = 5.dp).clickable {
-                        GlobalScope.async {
-                            //waterFall.emit(arrayListOf())
-                            waterFall.emit(arrayListOf())
-                            println("update-> ${stateFall.joinToString()}")
-                        }
-                    },
-                        fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
-                        color = Color.Blue
-                    )
-                    Text("${expense.value}", modifier = Modifier.padding(vertical = 2.dp),
-                        fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
-                        color = Color.Red
-                    )
-                }
-                Row(
-                    Modifier.weight(3f).background(Color.Red)
-                ) {
-                    LazyColumn {
-                        itemsIndexed(expList, itemContent = { index, item ->
-                            pizdec(num = item, parentIndex, index)
-                        })
                     }
                 }
             }
@@ -392,18 +303,57 @@ private fun pizdec(num: Int, parentIndex: Int, index: Int) {
     }
 
 }
+@Composable
+private fun plusik(isPositive: Boolean = true, parentIndex: Int) {
+    var saldoStrokeAmount = remember { mutableStateOf("") }
+
+    LaunchedEffect(isEditMode.value) {
+        if (!isEditMode.value && saldoStrokeAmount.value.isNotEmpty() && saldoStrokeAmount.value.isNotBlank()) {
+
+            val newValue = saldoStrokeAmount.value.toInt()
+            println("Prep1 ${newValue}")
+            addNewStroke(newValue * if(isPositive) 1 else -1, parentIndex)
+
+            saldoStrokeAmount.value = ""
+        }
+    }
+
+    Row(Modifier.width(100.dp).height(40.dp).clickable {
+        isEditMode.value = true
+    }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+        if (isEditMode.value) {
+            BasicTextField(
+                modifier = Modifier.fillMaxWidth()//.height(40.dp)
+                    .background(Color.Magenta),
+                value = saldoStrokeAmount.value,
+                onValueChange = {
+                    if (it.isNotEmpty()) {
+                        saldoStrokeAmount.value = it
+                    }
+
+
+                },
+                textStyle = TextStyle.Default.copy(fontSize = 15.sp)
+            )
+        } else {
+            Text(text = "+", style = MaterialTheme.typography.body1,
+                modifier = Modifier.padding(10.dp)
+            )
+        }
+
+    }
+}
 
 private fun tester1() {
     GlobalScope.launch {
         repeat(100) {
             stateFall = arrayListOf(
                 arrayListOf(11,12,13,(-10..20).random()),
-                arrayListOf(21,22,23,(-20..30).random()),
-                arrayListOf(31,32,33,(-30..40).random()),
+                arrayListOf(11,22,23,(-20..30).random()),
+                arrayListOf(11,32,33,(-30..40).random()),
             )
             update()
-            delay(200)
+            delay(10)
         }
-
     }
 }
