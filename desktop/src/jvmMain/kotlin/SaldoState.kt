@@ -4,8 +4,6 @@ data class SaldoState(
 
 enum class SaldoAction {
     EDITING,
-    DONE_EDIT,
-    REFRESH,
     SHOW
 }
 

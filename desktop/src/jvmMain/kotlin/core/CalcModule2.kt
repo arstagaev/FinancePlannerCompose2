@@ -56,7 +56,7 @@ fun main() {
 //    q.safeInserting(1,777,isConst = true)
 //    q.safeUpdate(1,0,888)
    // q.safeDelete(0,4,andFuture = true)
-//    log2()
+    //    log2()
     println(CalcModule2.currentBudgetX.value.joinToString())
 }
 fun log2() = Unit// println(">size:${q.size} | ${q.joinToString()}")

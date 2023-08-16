@@ -39,133 +39,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import colorCredit
-import colorDebit
 import core.*
 import core.CalcModule2.currentBudgetOUT
 import core.CalcModule2.currentBudgetX
 import kotlinx.coroutines.*
-import refresh
 
-@Composable
-fun App() {
-
-    MaterialTheme {
-
-        // val curBud = currentBudget.collectAsState()
-        // val ctx = CoroutineScope(Dispatchers.Default)
-        //var resd = currentBudgetX.value //remember { prep(currentBudgetX.value) }
-
-        LaunchedEffect(saldoState.value) {
-
-            println("REFRESH")
-            //resd = currentBudgetX.value
-        }
-
-        Column {
-            val isEdit = remember { saldoState }
-            // upper red line, which define we edit now texts
-            AnimatedVisibility(
-                saldoState.value.saldoAction == SaldoAction.EDITING
-            ) {
-                Row(Modifier.fillMaxWidth().height(50.dp).background(Color.Red).clickable {
-                    saldoState.value = saldoState.value.copy(saldoAction = SaldoAction.SHOW)
-
-
-                }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically
-                ) {
-//                    Box(Modifier.fillMaxSize().weight(1f).background(Color.Red).clickable {
-//
-//                    })
-                    Text("Recalculate", fontSize = 30.sp)
-                }
-            }
-
-            LazyRow(modifier = Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
-                itemsIndexed(items = prep(itemBudget), itemContent = { indx, item ->
-                    PlateMonth(item,indx)
-                })
-                // circle "plus" for add new month:
-                item {
-                    Box(modifier = Modifier.size(50.dp).clip(CircleShape).background(Color.White).clickable {
-
-                    }) {
-                        Text(text = "+", style = MaterialTheme.typography.body1,
-                            modifier = Modifier.align(Alignment.Center), textAlign = TextAlign.Center
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-// whole Vertical plate, is symbol of month:
-@Composable
-fun PlateMonth(saldo: Saldo, indxMonth: Int) {
-
-
-    var income = remember { mutableStateOf(0) }
-    var expense = remember { mutableStateOf(0) }
-
-    var incList = mutableListOf<Int>()
-    var expList = mutableListOf<Int>()
-    _itemBudget[indxMonth].filter { it != null && it > 0 }.forEach {
-        incList.add(it?:0)
-    }
-    income.value = incList.sum()
-    _itemBudget[indxMonth].filter { it != null && it < 0 }.forEach {
-        expList.add(it?:0)
-    }
-    expense.value = expList.sum()
-   // var saldoRefresh: Saldo = saldo
-    LaunchedEffect(saldoState.value) {
-
-    }
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(5.dp),
-        elevation = 10.dp
-    ) {
-        Box(Modifier.clickable {  }) {
-            Text("${saldo.month} ${saldo.year}", modifier = Modifier.fillMaxSize().padding(top = (1).dp,start = 0.dp).align(Alignment.TopCenter),
-                fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Light,
-                color = Color.LightGray
-            )
-
-            Column(
-                modifier = Modifier.padding(top = 15.dp), horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(
-                    Modifier.weight(3f).background(colorDebit))
-                {
-                    verticalList(incList, saldo.month, saldo.year, indxMonth = indxMonth, isDebet = true)
-                }
-                // SUMMA:
-                Column(Modifier.weight(1f).background(Color.White), verticalArrangement = Arrangement.Center) {
-                    Text("${income.value}", modifier = Modifier.padding(vertical = 2.dp),
-                        fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
-                        color = Color.Green
-                    )
-                    Text("${income.value+expense.value}", modifier = Modifier.padding(vertical = 5.dp),
-                        fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
-                        color = Color.Blue
-                    )
-                    Text("${expense.value}", modifier = Modifier.padding(vertical = 2.dp),
-                        fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
-                        color = Color.Red
-                    )
-                }
-                Row(
-                    Modifier.weight(3f).background(colorCredit)
-                ) {
-                    verticalList(expList, saldo.month, saldo.year, indxMonth, false)
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun verticalList(statement: List<Int?>, month: Int, year: Int, indxMonth: Int, isDebet: Boolean) {
@@ -313,7 +191,8 @@ fun main() = application {
         //App()
         //Test()
         //Tester()
-        TesterThree()
+        //TesterThree()
+        AppX2()
     }
 }
 private val _itemList = mutableStateListOf<String>()
