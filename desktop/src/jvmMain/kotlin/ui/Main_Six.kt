@@ -7,10 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.Card
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -30,37 +27,60 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 
-private val waterFall = MutableSharedFlow<ArrayList<ArrayList<Int>>>()
+private val waterFall = MutableSharedFlow<ArrayList<ArrayList<SaldoCell>>>()
 private val resultFall = MutableSharedFlow<ArrayList<ResultSaldo>>()
-private var stateFall = arrayListOf<ArrayList<Int>>(
-    arrayListOf(1,2,3,10,10,-110),
-    arrayListOf(10,10,10,1,2,3),
-    arrayListOf(-10,-10,-10,3,2,1)
+val futureFall = mutableStateOf<FutureSaldo?>(null)
+private var stateFall = arrayListOf<ArrayList<SaldoCell>>(
+    arrayListOf(SaldoCell(amount = 1),SaldoCell(amount = 1),SaldoCell(1),SaldoCell(1)),
+    arrayListOf(SaldoCell(amount = 1),SaldoCell(amount = 1),SaldoCell(1),SaldoCell(-1)),
+    arrayListOf(SaldoCell(amount = 12),SaldoCell(amount = 1),SaldoCell(1, isConst = true),SaldoCell(111))
 )
 private var resultArray = arrayListOf<ResultSaldo>()
 
 private var isEditMode = mutableStateOf(false)
 
 data class ResultSaldo(
-    val income: Int, val sum: Int, val expense: Int//, val arrayIncome: ArrayList<Int>, val arrayExpense: ArrayList<Int>
+    val income: Int, val sum: Int, val expense: Int//, var isForecast: Boolean = false//, val arrayIncome: ArrayList<Int>, val arrayExpense: ArrayList<Int>
 )
+data class FutureSaldo(val income: Int,
+                       val sum1: Int,
+                       val sum2: Int,
+                       val sum3: Int,
+                       val expense: Int, var incomes: List<Int>, var expenses: List<Int>)
 
-data class SaldoCell(var name: String? = null,var amount: Int)
+data class SaldoCell(var amount: Int, var name: String? = null, var isConst: Boolean = false)
 
 fun updateXXX() {
     resultArray.clear()
     var lastSum = 0
     stateFall.forEach { month ->
-        var incList = ArrayList(month.filter { it != null && it > 0  })
-        var expList = ArrayList(month.filter { it != null && it < 0  })
+        var incList = ArrayList(month.filter { it != null && it.amount > 0  })
+        var expList = ArrayList(month.filter { it != null && it.amount < 0  })
 
-        var income = incList.sum()
-        var expense = expList.sum()
+        var income = incList.sumOf { it.amount }
+        var expense = expList.sumOf { it.amount }
 
         lastSum += income + expense
 
         resultArray.add(ResultSaldo(income = income, sum = lastSum, expense = expense))
     }
+    // make forecast
+    val lastMonthConsts = stateFall.last().filter { it.isConst }
+    val incomeConst = lastMonthConsts.filter { it.amount > 0 }.map { it.amount }
+    val expenseConst = lastMonthConsts.filter { it.amount < 0 }.map { it.amount }
+
+    val sumIncConst = incomeConst.sum()
+    val sumExpConst = expenseConst.sum()
+
+    val sum1 = lastSum + sumIncConst - sumExpConst
+    val sum2 = sum1 + sumIncConst - sumExpConst
+    val sum3 = sum2 + sumIncConst - sumExpConst
+
+    var forecast = FutureSaldo(income = sumIncConst, expense = sumExpConst,
+        sum1 = sum1,
+        sum2 = sum2,
+        sum3 = sum3,
+        incomes = incomeConst, expenses = expenseConst)
 
     GlobalScope.async {
 //        stateFall.forEachIndexed { index, ints ->
@@ -72,8 +92,8 @@ fun updateXXX() {
         waterFall.emit(arrayListOf())
         waterFall.emit(stateFall)
 
-
-
+        //futureFall.emit(null)
+        futureFall.value = (forecast)
 
 
 
@@ -84,26 +104,26 @@ fun updateXXX() {
 private fun updateStroke(oldValue: Int, newValue: Int?, parentIndex: Int) {
     if (newValue == null) return
     stateFall[parentIndex].forEachIndexed { index, i ->
-        if (i == oldValue) {
-            stateFall[parentIndex][index] = newValue
+        if (i.amount == oldValue) {
+            stateFall[parentIndex][index].amount = newValue
             return@forEachIndexed
         }
     }
     updateXXX()
 }
 
-private fun addNewStroke(newValue: Int?, parentIndex: Int,isConst: Boolean = false) {
+private fun addNewCell(newValue: SaldoCell?, parentIndex: Int) {
     if (newValue == null) return
 
     if (parentIndex >= stateFall.size) {
-        var newArrayList = arrayListOf<Int>(newValue)
+        var newArrayList = arrayListOf<SaldoCell>(newValue)
 
 
         stateFall.add(newArrayList)
     } else {
         stateFall[parentIndex].add(newValue)
 
-        if (isConst) {
+        if (newValue.isConst) {
             // add in another saldo`s
             stateFall.forEachIndexed { index, ints ->
                 if (index != parentIndex) {
@@ -113,14 +133,18 @@ private fun addNewStroke(newValue: Int?, parentIndex: Int,isConst: Boolean = fal
         }
 
     }
-    println("addNewStroke[ ${stateFall.joinToString()} ]")
+    println("const:${newValue.isConst} addNewStroke[ ${stateFall.joinToString()} ] ")
     updateXXX()
 }
-
-private fun delete(monthIndex: Int, value: Int, andFuture: Boolean = false) {
+// TODO need check:
+private fun deleteCell(monthIndex: Int, value: SaldoCell, andFuture: Boolean = false) {
     if (monthIndex < stateFall.size) {
         //stateFall[monthIndex] = ArrayList(stateFall[monthIndex].minus(element = value))
         stateFall[monthIndex].remove(element = value)
+//        stateFall[monthIndex].forEachIndexed { index, saldoCell ->
+//            if ()
+//            stateFall[monthIndex].removeAt(index)
+//        }
         if (andFuture) {
             // remove in another saldo`s
             stateFall[monthIndex].forEachIndexed { indexY, ints ->
@@ -177,17 +201,18 @@ fun AppX2() {
             col.value.forEachIndexed { parentIndex, parentItem ->
                 item {
                     //monthZero(parentItem, parentIndex)
-                    var incList = parentItem.filter { it != null && it > 0  }
-                    var expList = parentItem.filter { it != null && it < 0  }
-
-                    var income = remember { mutableStateOf(incList.sum()) }
-                    var expense = remember { mutableStateOf(expList.sum()) }
-
-                    LaunchedEffect(incList, expList) {
-                        income.value = incList.sum()
-                        expense.value = expList.sum()
-                    }
+//                    var incList = parentItem.filter { it != null && it.amount > 0  }
+//                    var expList = parentItem.filter { it != null && it.amount < 0  }
+//
+//                    var income = remember { mutableStateOf(incList.sum()) }
+//                    var expense = remember { mutableStateOf(expList.sum()) }
+//
+//                    LaunchedEffect(incList, expList) {
+//                        income.value = incList.sum()
+//                        expense.value = expList.sum()
+//                    }
                     val res = resultFall.collectAsState(resultArray)
+
                     Card(
                         modifier = Modifier
                             .width(150.dp)
@@ -208,15 +233,15 @@ fun AppX2() {
                                 {
                                     LazyColumn {
                                         itemsIndexed(
-                                            parentItem.filter { it > 0 },
+                                            parentItem.filter { it.amount > 0 },
                                             itemContent = { index, item ->
-                                                pizdec(num = item, parentIndex, index)
+                                                strokeAgregator(item, parentIndex, index)
                                                 //Text(">${item}")
                                             }
                                         )
                                         // circle "plus" for add new stroke of Saldo
                                         item {
-                                            plusik(isPositive = true, parentIndex = parentIndex)
+                                            plusik(isIncome = true, parentIndex = parentIndex)
                                         }
                                     }
                                 }
@@ -247,14 +272,14 @@ fun AppX2() {
                                     Modifier.weight(3f).background(Color.Red)
                                 ) {
                                     LazyColumn {
-                                        itemsIndexed(parentItem.filter { it < 0 }, itemContent = { index, itemStroke ->
+                                        itemsIndexed(parentItem.filter { it.amount < 0 }, itemContent = { index, itemStroke ->
                                             //Text(">${item}")
-                                            pizdec(num = itemStroke, parentIndex, index)
+                                            strokeAgregator(itemStroke, parentIndex, index, isIncome = true)
 
                                         })
                                         // circle "plus" for add new stroke of Saldo
                                         item {
-                                            plusik(isPositive = false, parentIndex)
+                                            plusik(isIncome = false, parentIndex)
                                         }
                                     }
 
@@ -263,6 +288,17 @@ fun AppX2() {
                         }
                     }
                 }
+
+
+            }
+            item {
+                forecastGhostMonth(1)
+            }
+            item {
+                forecastGhostMonth(2)
+            }
+            item {
+                forecastGhostMonth(3)
             }
         }
     }
@@ -270,10 +306,10 @@ fun AppX2() {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun pizdec(num: Int, parentIndex: Int, index: Int) {
-    val oldvalue = num
+fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome: Boolean = true) {
+    val oldvalue = saldoCell.amount
     var isEdit = remember { mutableStateOf(false) }
-    var saldoStrokeAmount = remember { mutableStateOf("${num}") }
+    var saldoStrokeAmount = remember { mutableStateOf("${saldoCell.amount}") }
     var isShowRemoveIcon = remember { mutableStateOf(false) }
 
     LaunchedEffect(isEditMode.value) {
@@ -298,17 +334,19 @@ private fun pizdec(num: Int, parentIndex: Int, index: Int) {
         }
     ) {
         if (isEdit.value) {
-            Column(Modifier.width(50.dp).background(Color.Magenta).clickable {
+            Column(Modifier.fillMaxWidth().background(Color.Magenta).clickable {
 
             }) {
-                BasicTextField(
+                TextField(
                     modifier = Modifier.fillMaxWidth()//.height(40.dp)
                         .background(Color.Magenta),
-                    value = saldoStrokeAmount.value,
+                    value = saldoStrokeAmount.value.toString(),
                     onValueChange = {
-                        if (it.isNotEmpty()) {
+                        val newNum = it.filter { it.isDigit() }
+                        if (newNum.isNotEmpty()) {
                             saldoStrokeAmount.value = it
                         }
+
 
 
                         //println("->>${currentBudgetX.value.joinToString()}")
@@ -316,10 +354,10 @@ private fun pizdec(num: Int, parentIndex: Int, index: Int) {
                     },
                     textStyle = TextStyle.Default.copy(fontSize = 15.sp)
                 )
-                Row(Modifier.clickable { delete(monthIndex = parentIndex,value = saldoStrokeAmount.value.toInt(),) }) {
+                Row(Modifier.clickable { deleteCell(monthIndex = parentIndex,value = saldoCell) }) {
                     Text("Delete", fontSize = 10.sp)
                 }
-                Row(Modifier.clickable { delete(monthIndex = parentIndex,value = saldoStrokeAmount.value.toInt(),true) }) {
+                Row(Modifier.clickable { deleteCell(monthIndex = parentIndex,value = saldoCell,true) }) {
                     Text("Delete and future", fontSize = 10.sp)
                 }
             }
@@ -333,32 +371,39 @@ private fun pizdec(num: Int, parentIndex: Int, index: Int) {
                 }
 
             }) {
-                Text("${saldoStrokeAmount.value}")
+                Text("${saldoCell.amount} ${if (saldoCell.isConst) "✅" else ""}")
             }
         }
-        if (isShowRemoveIcon.value) {
-            Box(Modifier.fillMaxSize().align(Alignment.CenterEnd).background(Color.Red)
-                .clickable {
-                    delete(monthIndex = parentIndex,value = saldoStrokeAmount.value.toInt(),)
-
-                })
-        }
+//        if (isShowRemoveIcon.value) {
+//            Box(Modifier.fillMaxSize().align(Alignment.CenterEnd).background(Color.Red)
+//                .clickable {
+//                    deleteCell(monthIndex = parentIndex,value = saldoStrokeAmount.value)
+//                })
+//        }
     }
 }
+
 @Composable
-private fun plusik(isPositive: Boolean = true, parentIndex: Int) {
+private fun plusik(isIncome: Boolean = true, parentIndex: Int) {
     var saldoStrokeAmount = remember { mutableStateOf("") }
+    val checkedState = remember { mutableStateOf(false) }
+    //var saldoStrokeName = remember { mutableStateOf("") }
     var isEdit = remember { mutableStateOf(false) }
+    var newCellSaldo = remember { mutableStateOf<SaldoCell>(SaldoCell(amount = 0,name = "")) }
+    //var isEditByHuman = remember { mutableStateOf(false) }
 
     LaunchedEffect(isEditMode.value) {
-        if (!isEditMode.value && saldoStrokeAmount.value.isNotEmpty() && saldoStrokeAmount.value.isNotBlank()) {
+        if (!isEditMode.value && saldoStrokeAmount.value.toString().isNotEmpty() && saldoStrokeAmount.value.toString().isNotBlank()) {
+            if (isEdit.value) {
+                val newValue = saldoStrokeAmount.value.toInt() ?: 0// newCellSaldo.value.amount.toInt()
+                println("Prep1 ${newValue} ${checkedState.value}")
 
-            val newValue = saldoStrokeAmount.value.toInt()
-            println("Prep1 ${newValue}")
-            addNewStroke(newValue * if(isPositive) 1 else -1, parentIndex)
+                //addNewCell(SaldoCell(amount = newValue * if(isIncome) 1 else -1), parentIndex)
+                addNewCell(newCellSaldo.value.copy(amount = newValue * if (isIncome) 1 else -1, isConst = checkedState.value), parentIndex)
 
-            saldoStrokeAmount.value = ""
-
+                newCellSaldo.value.amount = 0
+                isEdit.value = false
+            }
         }
         if (!isEditMode.value) {
             if (isEdit.value) {
@@ -368,30 +413,64 @@ private fun plusik(isPositive: Boolean = true, parentIndex: Int) {
         }
     }
 
-    Row(Modifier.fillMaxWidth().height(40.dp).clickable {
+    Row(Modifier.fillMaxWidth()//.height(40.dp)
+        .clickable {
         isEditMode.value = true
         isEdit.value = true
-    }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+    }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.Top) {
         if (isEdit.value) {
-            BasicTextField(
-                modifier = Modifier.fillMaxWidth()//.height(40.dp)
-                    .background(Color.Magenta),
-                value = saldoStrokeAmount.value,
-                onValueChange = {
-                    if (it.isNotEmpty()) {
-                        saldoStrokeAmount.value = it
-                    }
+            Column {
+                TextField(
+                    modifier = Modifier.fillMaxWidth()//.height(40.dp)
+                        .background(Color.Magenta),
+                    //value = newCellSaldo.value.amount.toString(),
+                    value = saldoStrokeAmount.value,
+                    onValueChange = {
+                        if (it.isNotEmpty()) {
+                            //newCellSaldo.value.amount = it.toInt()
+                            saldoStrokeAmount.value = it
+                            //isEditByHuman.value = true
+                        }
 
 
-                },
-                textStyle = TextStyle.Default.copy(fontSize = 15.sp)
-            )
+                    },
+                    label = { Text("Enter new amount", fontSize = 15.sp) },
+                    textStyle = TextStyle.Default.copy(fontSize = 12.sp)
+                )
+                TextField(
+                    modifier = Modifier.fillMaxWidth()//.height(40.dp)
+                        .background(Color.Magenta),
+                    value = newCellSaldo.value.name?:"",
+
+                    onValueChange = {
+                        if (it.isNotEmpty()) {
+                            newCellSaldo.value.name = it
+                            //isEditByHuman.value = true
+                        }
+                    },
+                    label = { Text("Enter name for source of amount", fontSize = 15.sp) },
+                    textStyle = TextStyle.Default.copy(fontSize = 10.sp),
+
+                )
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = checkedState.value,
+                        onCheckedChange = {
+                            checkedState.value = it
+                            //isEditByHuman.value = true
+                        },
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(modifier = Modifier.padding(start = 5.dp), text = "is is permanent ${if(isIncome) "income" else "expense"}", fontSize = 12.sp)
+                }
+            }
+
         } else {
             Text(text = "+", style = MaterialTheme.typography.body1,
                 modifier = Modifier.padding(10.dp)
             )
         }
-
     }
 }
 
@@ -399,9 +478,9 @@ private fun tester1() {
     GlobalScope.launch {
         repeat(100) {
             stateFall = arrayListOf(
-                arrayListOf(11,12,13,(-10..20).random()),
-                arrayListOf(11,22,23,(-20..30).random()),
-                arrayListOf(11,32,33,(-30..40).random()),
+                arrayListOf(SaldoCell(1),SaldoCell(amount = (-10..20).random())),
+                arrayListOf(SaldoCell(1),SaldoCell(amount = (-20..30).random())),
+                arrayListOf(SaldoCell(1),SaldoCell(amount = (-30..40).random())),
             )
             updateXXX()
             delay(10)
