@@ -44,6 +44,9 @@ private var isEditMode = mutableStateOf(false)
 data class ResultSaldo(
     val income: Int, val sum: Int, val expense: Int//, val arrayIncome: ArrayList<Int>, val arrayExpense: ArrayList<Int>
 )
+
+data class SaldoCell(var name: String? = null,var amount: Int)
+
 fun updateXXX() {
     resultArray.clear()
     var lastSum = 0
@@ -279,8 +282,6 @@ private fun pizdec(num: Int, parentIndex: Int, index: Int) {
                 updateStroke(oldValue = oldvalue, newValue = saldoStrokeAmount.value.toInt(), parentIndex,)
                 isEdit.value = false
             }
-
-
         }
     }
 
@@ -343,11 +344,11 @@ private fun pizdec(num: Int, parentIndex: Int, index: Int) {
                 })
         }
     }
-
 }
 @Composable
 private fun plusik(isPositive: Boolean = true, parentIndex: Int) {
     var saldoStrokeAmount = remember { mutableStateOf("") }
+    var isEdit = remember { mutableStateOf(false) }
 
     LaunchedEffect(isEditMode.value) {
         if (!isEditMode.value && saldoStrokeAmount.value.isNotEmpty() && saldoStrokeAmount.value.isNotBlank()) {
@@ -357,13 +358,21 @@ private fun plusik(isPositive: Boolean = true, parentIndex: Int) {
             addNewStroke(newValue * if(isPositive) 1 else -1, parentIndex)
 
             saldoStrokeAmount.value = ""
+
+        }
+        if (!isEditMode.value) {
+            if (isEdit.value) {
+                //updateStroke(oldValue = oldvalue, newValue = saldoStrokeAmount.value.toInt(), parentIndex,)
+                isEdit.value = false
+            }
         }
     }
 
     Row(Modifier.fillMaxWidth().height(40.dp).clickable {
         isEditMode.value = true
+        isEdit.value = true
     }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-        if (isEditMode.value) {
+        if (isEdit.value) {
             BasicTextField(
                 modifier = Modifier.fillMaxWidth()//.height(40.dp)
                     .background(Color.Magenta),
