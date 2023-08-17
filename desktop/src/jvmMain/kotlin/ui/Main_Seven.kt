@@ -30,32 +30,67 @@
 //import kotlinx.coroutines.flow.MutableSharedFlow
 //import kotlinx.coroutines.launch
 //
-//private val waterFall = MutableSharedFlow<ArrayList<ArrayList<Int>>>()
-//private val resultFall = MutableSharedFlow<ArrayList<ResultSaldo>>()
-//private var stateFall = arrayListOf<ArrayList<Int>>(
-//    arrayListOf(1,2,3,10,10,-110),
-//    arrayListOf(10,10,10,1,2,3),
-//    arrayListOf(-10,-10,-10,3,2,1)
+//private val waterFall = MutableSharedFlow<ArrayList<MonthSaldo>>()
+//private val resultFall = MutableSharedFlow<ArrayList<SaldoCell>>()
+//private var stateFall = arrayListOf<MonthSaldo>(
+//    MonthSaldo(
+//        name = "111",
+//        income = arrayListOf<SaldoCell>(
+//            SaldoCell(amount =1)
+//        ),
+//        expense = arrayListOf<SaldoCell>(
+//            SaldoCell(amount =1)
+//        ),
+//        incomeSum = 0,
+//        cumulativeSum = 0,
+//        expenseSum = 0
+//    ),
+//    MonthSaldo(
+//        name = "111",
+//        income = arrayListOf<SaldoCell>(
+//            SaldoCell(amount = 1)
+//        ),
+//        expense = arrayListOf<SaldoCell>(
+//            SaldoCell(amount = 1)
+//        ),
+//        incomeSum = 0,
+//        cumulativeSum = 0,
+//        expenseSum = 0
+//    )
 //)
 //private var resultArray = arrayListOf<ResultSaldo>()
 //
 //private var isEditMode = mutableStateOf(false)
 //
-//data class ResultSaldo(val income: Int, val sum: Int, val expense: Int, val arrayIncome: ArrayList<Int>, val arrayExpense: ArrayList<Int>)
+//data class MonthSaldo(
+//    val name: String,
+//    var income: ArrayList<SaldoCell> = arrayListOf(),
+//    var expense: ArrayList<SaldoCell> = arrayListOf(),
+//
+//    var incomeSum: Int,
+//    var cumulativeSum: Int,
+//    var expenseSum: Int,
+//)
+//
+//data class SaldoCell(var name: String? = null, var amount: Int )
+//
+//data class ResultSaldo(
+//    val income: Int, val sum: Int, val expense: Int//, val arrayIncome: ArrayList<Int>, val arrayExpense: ArrayList<Int>
+//)
 //fun updateXXX() {
-//    resultArray.clear()
-//    var lastSum = 0
-//    stateFall.forEach { month ->
-//        var incList = ArrayList(month.filter { it != null && it > 0  })
-//        var expList = ArrayList(month.filter { it != null && it < 0  })
-//
-//        var income = incList.sum()
-//        var expense = expList.sum()
-//
-//        lastSum += income + expense
-//
-//        resultArray.add(ResultSaldo(income = income,lastSum,expense, arrayIncome = incList, arrayExpense = expList))
-//    }
+//    //resultArray.clear()
+////    var lastSum = 0
+////    stateFall.forEach { month ->
+////        var incList = ArrayList(month.filter { it != null && it > 0  })
+////        var expList = ArrayList(month.filter { it != null && it < 0  })
+////
+////        var income = incList.sum()
+////        var expense = expList.sum()
+////
+////        lastSum += income + expense
+////
+////        resultArray.add(ResultSaldo(income = income, sum = lastSum, expense = expense))
+////    }
 //
 //    GlobalScope.async {
 ////        stateFall.forEachIndexed { index, ints ->
@@ -66,7 +101,8 @@
 //        waterFall.emit(arrayListOf())
 //        waterFall.emit(stateFall)
 //
-//        resultFall.emit(resultArray)
+////        resultFall.emit(arrayListOf())
+////        resultFall.emit(resultArray)
 //
 //
 //
@@ -75,59 +111,66 @@
 //    }
 //}
 //
-//private fun updateStroke(oldValue: Int, newValue: Int?, parentIndex: Int) {
+//private fun updateSaldo(oldValue: Int, newValue: Int?,nameCell: String? = null,isIncome: Boolean = true, monthName: String) {
 //    if (newValue == null) return
-//    stateFall[parentIndex].forEachIndexed { index, i ->
-//        if (i == oldValue) {
-//            stateFall[parentIndex][index] = newValue
-//            return@forEachIndexed
+//    val cell = SaldoCell(name = nameCell, amount = newValue)
+//
+//    stateFall.forEachIndexed { index, monthSaldo ->
+//        if (monthName == monthSaldo.name) {
+//            if (isIncome) {
+//                stateFall[index].income.add(cell)
+//            } else {
+//                stateFall[index].expense.add(cell)
+//            }
+//
 //        }
 //    }
 //    updateXXX()
 //}
 //
 //private fun addNewStroke(newValue: Int?, parentIndex: Int,isConst: Boolean = false) {
-//    if (newValue == null) return
-//
-//    if (parentIndex >= stateFall.size) {
-//        var newArrayList = arrayListOf<Int>(newValue)
-//
-//
-//        stateFall.add(newArrayList)
-//    } else {
-//        stateFall[parentIndex].add(newValue)
-//
-//        if (isConst) {
-//            // add in another saldo`s
-//            stateFall.forEachIndexed { index, ints ->
-//                if (index != parentIndex) {
-//                    stateFall[index].add(newValue)
-//                }
-//            }
-//        }
-//
-//    }
-//    updateXXX()
+////    if (newValue == null) return
+////
+////    if (parentIndex >= stateFall.size) {
+////        var newArrayList = arrayListOf<Int>(newValue)
+////
+////
+////        stateFall.add(newArrayList)
+////    } else {
+////        stateFall[parentIndex].add(newValue)
+////
+////        if (isConst) {
+////            // add in another saldo`s
+////            stateFall.forEachIndexed { index, ints ->
+////                if (index != parentIndex) {
+////                    stateFall[index].add(newValue)
+////                }
+////            }
+////        }
+////
+////    }
+////    println("addNewStroke[ ${stateFall.joinToString()} ]")
+////    updateXXX()
 //}
-//
+////
 //private fun delete(monthIndex: Int, value: Int, andFuture: Boolean = false) {
-//    if (monthIndex < stateFall.size) {
-//        //stateFall[monthIndex] = ArrayList(stateFall[monthIndex].minus(element = value))
-//        stateFall[monthIndex].remove(element = value)
-//        if (andFuture) {
-//            // remove in another saldo`s
-//            stateFall[monthIndex].forEachIndexed { indexY, ints ->
-//                if (indexY != monthIndex && stateFall.size > indexY) {
-//                    stateFall[indexY] = ArrayList(stateFall[indexY].minus(value))
-//                }
-//            }
-//        }
-//        //return this
-//        println("safeDelete: [$value] ${stateFall.joinToString()}")
-//    }else {
-//        //return arrayListOf()
-//        println("ERROR Y >")
-//    }
+////    if (monthIndex < stateFall.size) {
+////        //stateFall[monthIndex] = ArrayList(stateFall[monthIndex].minus(element = value))
+////        stateFall[monthIndex].remove(element = value)
+////        if (andFuture) {
+////            // remove in another saldo`s
+////            stateFall[monthIndex].forEachIndexed { indexY, ints ->
+////                if (indexY != monthIndex && stateFall.size > indexY) {
+////                    stateFall[indexY] = ArrayList(stateFall[indexY].minus(value))
+////                }
+////            }
+////        }
+////        //return this
+////        println("safeDelete: [$value] ${stateFall.joinToString()}")
+////    }else {
+////        //return arrayListOf()
+////        println("ERROR Y >")
+////    }
 //    updateXXX()
 //}
 //
@@ -144,7 +187,7 @@
 //    val col = waterFall.collectAsState(
 //        stateFall
 //    )
-//    val res = resultFall.collectAsState(resultArray)
+//    //val res = resultFall.collectAsState(resultArray)
 //
 //    Column(
 //        Modifier//.fillMaxWidth()
@@ -154,11 +197,11 @@
 //        ) {
 //            Row(
 //                Modifier.fillMaxWidth().height(50.dp).background(Color.Red).clickable {
-//                isEditMode.value = false
-//                //actionSave.value = true
-//                println("refresh-> ${stateFall.joinToString()}")
-//                updateXXX()
-//            }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically
+//                    isEditMode.value = false
+//                    //actionSave.value = true
+//                    println("refresh-> ${stateFall.joinToString()}")
+//                    updateXXX()
+//                }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically
 //            ) {
 //                Text("Recalculate", fontSize = 30.sp)
 //            }
@@ -188,7 +231,7 @@
 //                        elevation = 10.dp
 //                    ) {
 //                        Box(Modifier.clickable {  }) {
-//                            Text("${parentItem.size} ${parentIndex}", modifier = Modifier.fillMaxSize().padding(top = (1).dp,start = 0.dp).align(Alignment.TopCenter),
+//                            Text("${parentItem.expense.size} ${parentIndex}", modifier = Modifier.fillMaxSize().padding(top = (1).dp,start = 0.dp).align(Alignment.TopCenter),
 //                                fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Light,
 //                                color = Color.LightGray
 //                            )
@@ -200,10 +243,13 @@
 //                                    Modifier.weight(3f).background(Color.Green))
 //                                {
 //                                    LazyColumn {
-//                                        itemsIndexed(res.value[parentIndex].arrayIncome, itemContent = { index, item ->
-//                                            pizdec(num = item, parentIndex, index)
-//                                            //Text(">${item}")
-//                                        })
+//                                        itemsIndexed(
+//                                            parentItem.income,
+//                                            itemContent = { index, item ->
+//                                                pizdec(num = item, parentIndex, index, monthName = parentItem.name)
+//                                                //Text(">${item}")
+//                                            }
+//                                        )
 //                                        // circle "plus" for add new stroke of Saldo
 //                                        item {
 //                                            plusik(isPositive = true, parentIndex = parentIndex)
@@ -213,11 +259,11 @@
 //
 //                                // SUMMA:
 //                                Column(Modifier.weight(1f).background(Color.White), verticalArrangement = Arrangement.Center) {
-//                                    Text("${res.value[parentIndex].income}", modifier = Modifier.padding(vertical = 2.dp),
+//                                    Text("${parentItem.income}", modifier = Modifier.padding(vertical = 2.dp),
 //                                        fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
 //                                        color = Color.Green
 //                                    )
-//                                    Text("${res.value[parentIndex].sum}", modifier = Modifier.padding(vertical = 5.dp).clickable {
+//                                    Text("${0}", modifier = Modifier.padding(vertical = 5.dp).clickable {
 //                                        GlobalScope.async {
 //                                            //waterFall.emit(arrayListOf())
 //                                            waterFall.emit(arrayListOf())
@@ -227,18 +273,19 @@
 //                                        fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
 //                                        color = Color.Blue
 //                                    )
-//                                    Text("${res.value[parentIndex].expense}", modifier = Modifier.padding(vertical = 2.dp),
+//                                    Text("${0}", modifier = Modifier.padding(vertical = 2.dp),
 //                                        fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
 //                                        color = Color.Red
 //                                    )
 //                                }
+//
 //                                Row(
 //                                    Modifier.weight(3f).background(Color.Red)
 //                                ) {
 //                                    LazyColumn {
-//                                        itemsIndexed(res.value[parentIndex].arrayExpense, itemContent = { index, itemStroke ->
+//                                        itemsIndexed(parentItem.expense, itemContent = { index, itemStroke ->
 //                                            //Text(">${item}")
-//                                            pizdec(num = itemStroke, parentIndex, index)
+//                                            pizdec(num = itemStroke, parentIndex, index, monthName = parentItem.name)
 //
 //                                        })
 //                                        // circle "plus" for add new stroke of Saldo
@@ -246,6 +293,7 @@
 //                                            plusik(isPositive = false, parentIndex)
 //                                        }
 //                                    }
+//
 //                                }
 //                            }
 //                        }
@@ -258,8 +306,8 @@
 //
 //@OptIn(ExperimentalComposeUiApi::class)
 //@Composable
-//private fun pizdec(num: Int, parentIndex: Int, index: Int) {
-//    val oldvalue = num
+//private fun pizdec(num: SaldoCell, parentIndex: Int, index: Int,monthName: String) {
+//    val oldvalue = num.amount
 //    var isEdit = remember { mutableStateOf(false) }
 //    var saldoStrokeAmount = remember { mutableStateOf("${num}") }
 //    var isShowRemoveIcon = remember { mutableStateOf(false) }
@@ -267,7 +315,7 @@
 //    LaunchedEffect(isEditMode.value) {
 //        if (!isEditMode.value) {
 //            if (isEdit.value) {
-//                updateStroke(oldValue = oldvalue, newValue = saldoStrokeAmount.value.toInt(), parentIndex,)
+//                updateSaldo(oldValue = oldvalue, newValue = saldoStrokeAmount.value.toInt(), monthName = monthName)
 //                isEdit.value = false
 //            }
 //
@@ -306,7 +354,9 @@
 //                    },
 //                    textStyle = TextStyle.Default.copy(fontSize = 15.sp)
 //                )
-//                Row(Modifier.clickable { delete(monthIndex = parentIndex,value = saldoStrokeAmount.value.toInt(),) }) {
+//                Row(Modifier.clickable {
+//                    delete(monthIndex = parentIndex,value = saldoStrokeAmount.value.toInt(),)
+//                }) {
 //                    Text("Delete", fontSize = 10.sp)
 //                }
 //                Row(Modifier.clickable { delete(monthIndex = parentIndex,value = saldoStrokeAmount.value.toInt(),true) }) {
@@ -329,7 +379,7 @@
 //        if (isShowRemoveIcon.value) {
 //            Box(Modifier.fillMaxSize().align(Alignment.CenterEnd).background(Color.Red)
 //                .clickable {
-//                   delete(monthIndex = parentIndex,value = saldoStrokeAmount.value.toInt(),)
+//                    delete(monthIndex = parentIndex,value = saldoStrokeAmount.value.toInt(),)
 //
 //                })
 //        }
@@ -378,15 +428,15 @@
 //}
 //
 //private fun tester1() {
-//    GlobalScope.launch {
-//        repeat(100) {
-//            stateFall = arrayListOf(
-//                arrayListOf(11,12,13,(-10..20).random()),
-//                arrayListOf(11,22,23,(-20..30).random()),
-//                arrayListOf(11,32,33,(-30..40).random()),
-//            )
-//            updateXXX()
-//            delay(10)
-//        }
-//    }
+////    GlobalScope.launch {
+////        repeat(100) {
+////            stateFall = arrayListOf(
+////                arrayListOf(11,12,13,(-10..20).random()),
+////                arrayListOf(11,22,23,(-20..30).random()),
+////                arrayListOf(11,32,33,(-30..40).random()),
+////            )
+////            updateXXX()
+////            delay(10)
+////        }
+////    }
 //}
