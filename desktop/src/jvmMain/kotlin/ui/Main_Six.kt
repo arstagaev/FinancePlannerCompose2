@@ -124,9 +124,15 @@ private fun addNewCell(newValue: SaldoCell?, parentIndex: Int) {
         stateFall[parentIndex].add(newValue)
 
         if (newValue.isConst) {
+            var afterMatchCurrentMonth = false
             // add in another saldo`s
             stateFall.forEachIndexed { index, ints ->
-                if (index != parentIndex) {
+
+                if (index == parentIndex) {
+                    afterMatchCurrentMonth = true
+                }
+                if (index != parentIndex && afterMatchCurrentMonth) {
+
                     stateFall[index].add(newValue)
                 }
             }
