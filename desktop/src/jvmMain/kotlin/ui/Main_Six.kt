@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,10 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.GlobalScope
@@ -42,17 +46,24 @@ private var isEditMode = mutableStateOf(false)
 data class ResultSaldo(
     val income: Int, val sum: Int, val expense: Int//, var isForecast: Boolean = false//, val arrayIncome: ArrayList<Int>, val arrayExpense: ArrayList<Int>
 )
-data class FutureSaldo(val income: Int,
-                       val sum1: Int,
-                       val sum2: Int,
-                       val sum3: Int,
-                       val expense: Int, var incomes: List<Int>, var expenses: List<Int>)
+data class FutureSaldo(
+    val investments: Int,
+    val income: Int,
+    val sum1: Int,
+    val sum2: Int,
+    val sum3: Int,
+    val expense: Int, var incomes: List<Int>, var expenses: List<Int>,
+    var periodHalfYear: Int? = null,
+    var periodFirstYear: Int? = null,
+    var periodSecondYear: Int? = null,
+)
 
 data class SaldoCell(var amount: Int, var name: String? = null, var isConst: Boolean = false)
 
 fun updateXXX() {
+    var investments = 100
     resultArray.clear()
-    var lastSum = 0
+    var lastSum = investments
     stateFall.forEach { month ->
         var incList = ArrayList(month.filter { it != null && it.amount > 0  })
         var expList = ArrayList(month.filter { it != null && it.amount < 0  })
@@ -72,15 +83,44 @@ fun updateXXX() {
     val sumIncConst = incomeConst.sum()
     val sumExpConst = expenseConst.sum()
 
-    val sum1 = lastSum + sumIncConst - sumExpConst
-    val sum2 = sum1 + sumIncConst - sumExpConst
-    val sum3 = sum2 + sumIncConst - sumExpConst
+    val delta = sumIncConst - sumExpConst
 
-    var forecast = FutureSaldo(income = sumIncConst, expense = sumExpConst,
+    val sum1 = lastSum + delta
+    val sum2 = sum1 + delta
+    val sum3 = sum2 + delta
+
+    var cumulative = sum3
+    var sumHalfYear: Int? = null
+    var sumYear: Int?  = null
+    var sumSecondYear: Int?  = null
+
+    repeat(25) {
+        cumulative += delta
+
+        when(it) {
+            6 -> {
+                sumHalfYear = cumulative
+            }
+            12 -> {
+                sumYear = cumulative
+            }
+            24 -> {
+                sumSecondYear = cumulative
+            }
+            else -> {}
+        }
+    }
+
+    var forecast = FutureSaldo(investments = investments,
+        income = sumIncConst, expense = sumExpConst,
         sum1 = sum1,
         sum2 = sum2,
         sum3 = sum3,
-        incomes = incomeConst, expenses = expenseConst)
+        incomes = incomeConst, expenses = expenseConst,
+        periodHalfYear = sumHalfYear,
+        periodFirstYear = sumYear,
+        periodSecondYear = sumSecondYear
+    )
 
     GlobalScope.async {
 //        stateFall.forEachIndexed { index, ints ->
@@ -93,11 +133,11 @@ fun updateXXX() {
         waterFall.emit(stateFall)
 
         //futureFall.emit(null)
-        futureFall.value = (forecast)
+        futureFall.value = forecast
 
 
 
-        println("update-> ${stateFall.joinToString()}")
+        println("refresh-> ${stateFall.joinToString()}")
     }
 }
 
@@ -106,9 +146,20 @@ private fun updateStroke(oldValue: Int, newValue: Int?, parentIndex: Int) {
     stateFall[parentIndex].forEachIndexed { index, i ->
         if (i.amount == oldValue) {
             stateFall[parentIndex][index].amount = newValue
-            return@forEachIndexed
+            println("updateStroke:> ${stateFall[parentIndex].map { it.amount }.joinToString()}")
+            updateXXX()
+            return
         }
     }
+
+
+}
+
+private fun addNewSaldo() {
+    var toFuture = stateFall.last().filter { it.isConst }
+
+    stateFall.add(toFuture as ArrayList<SaldoCell>)
+
     updateXXX()
 }
 
@@ -171,7 +222,6 @@ private fun deleteCell(monthIndex: Int, value: SaldoCell, andFuture: Boolean = f
 @Composable
 fun AppX2() {
 
-
     LaunchedEffect(true) {
         println("At start: ${stateFall.joinToString()}")
         updateXXX()
@@ -204,6 +254,35 @@ fun AppX2() {
 //            itemsIndexed(col.value, itemContent = {parentIndex, parentItem ->
 //                monthZero(parentItem, parentIndex)
 //            })
+            item {
+                var futureSaldo = remember { futureFall }
+                val textInvest = buildAnnotatedString {
+                    withStyle(SpanStyle(color = Color.Blue)) {
+                        append("Initial investments:")
+                    }
+                    append("\n" + "${futureSaldo.value?.investments}")
+                }
+                Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+                    Card(
+                        modifier = Modifier
+                            .width(150.dp)
+                            .height(100.dp)
+                            .padding(5.dp),
+                        elevation = 10.dp
+                    ) {
+                        Box(Modifier.fillMaxSize()) {
+                            Text(textInvest,
+                                modifier = Modifier.padding(4.dp).align(Alignment.Center)
+                                    .clickable {},
+                                fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+                                //color = Color.Black,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+
+                    }
+                }
+            }
             col.value.forEachIndexed { parentIndex, parentItem ->
                 item {
                     //monthZero(parentItem, parentIndex)
@@ -294,7 +373,21 @@ fun AppX2() {
                         }
                     }
                 }
-
+            }
+            item {
+                Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+                    Box(modifier = Modifier.clickable {
+                        addNewSaldo()
+                    }
+                        //.padding(4.dp)
+                        .size(30.dp)
+                        .aspectRatio(1f)
+                        .background(Color.White, shape = CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(modifier = Modifier, text = "+", color= Color.Black,   textAlign = TextAlign.Center)
+                    }
+                }
 
             }
             item {
@@ -305,6 +398,9 @@ fun AppX2() {
             }
             item {
                 forecastGhostMonth(3)
+            }
+            item {
+                longForecast()
             }
         }
     }
