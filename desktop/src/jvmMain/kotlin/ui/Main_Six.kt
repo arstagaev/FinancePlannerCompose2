@@ -15,10 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -34,6 +31,15 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
+
+val colorDebit = Color(68,242,96)
+val colorCredit = Color(242,63,96)
+
+val colorDebitResult = Color(68,200,96)
+val colorCreditResult = Color(200,63,96)
+
+val colorDebitCard = Color(204,255,229)
+val colorCreditCard = Color(255,204,204)
 
 private val waterFall = MutableSharedFlow<ArrayList<ArrayList<SaldoCell>>>()
 private val resultFall = MutableSharedFlow<ArrayList<ResultSaldo>>()
@@ -67,8 +73,18 @@ data class SaldoCell(var amount: Int, var name: String? = null, var isConst: Boo
 fun updateXXX() {
     var investments = 100
     resultArray.clear()
+
+    // make result
     var lastSum = investments
-    stateFall.forEach { month ->
+
+    // for result
+    var deltaForFuture = 0
+    var incConst = 0
+    var expConst = 0
+    var futureIncome = listOf<Int>()
+    var futureExpense = listOf<Int>()
+
+    stateFall.forEachIndexed { index, month ->
         var incList = ArrayList(month.filter { it != null && it.amount > 0  })
         var expList = ArrayList(month.filter { it != null && it.amount < 0  })
 
@@ -78,20 +94,30 @@ fun updateXXX() {
         lastSum += income + expense
 
         resultArray.add(ResultSaldo(income = income, sum = lastSum, expense = expense))
+        if (index == stateFall.size-1) {
+            futureIncome = incList.filter { it.isConst }.map { it.amount }
+            futureExpense = expList.filter { it.isConst }.map { it.amount }
+
+            incConst = futureIncome.sum()
+            expConst = futureExpense.sum()
+
+            deltaForFuture = incConst + expConst
+        }
     }
+
     // make forecast
-    val lastMonthConsts = stateFall.last().filter { it.isConst }
-    val incomeConst = lastMonthConsts.filter { it.amount > 0 }.map { it.amount }
-    val expenseConst = lastMonthConsts.filter { it.amount < 0 }.map { it.amount }
+//    val lastMonthConsts = stateFall.last().filter { it.isConst }
+//    val incomeConst = lastMonthConsts.filter { it.amount > 0 }.map { it.amount }
+//    val expenseConst = lastMonthConsts.filter { it.amount < 0 }.map { it.amount }
+//
+//    val sumIncConst = incomeConst.sum()
+//    val sumExpConst = expenseConst.sum()
+//
+//    val delta = sumIncConst - sumExpConst
 
-    val sumIncConst = incomeConst.sum()
-    val sumExpConst = expenseConst.sum()
-
-    val delta = sumIncConst - sumExpConst
-
-    val sum1 = lastSum + delta
-    val sum2 = sum1 + delta
-    val sum3 = sum2 + delta
+    val sum1 = resultArray.last().sum + deltaForFuture //lastSum + delta + resultArray.last().sum
+    val sum2 = sum1 + deltaForFuture
+    val sum3 = sum2 + deltaForFuture
 
     var cumulative = sum3
     var sumHalfYear: Int? = null
@@ -99,7 +125,7 @@ fun updateXXX() {
     var sumSecondYear: Int?  = null
 
     repeat(25) {
-        cumulative += delta
+        cumulative += deltaForFuture
 
         when(it) {
             6 -> {
@@ -116,11 +142,11 @@ fun updateXXX() {
     }
 
     var forecast = FutureSaldo(investments = investments,
-        income = sumIncConst, expense = sumExpConst,
+        income = incConst, expense = expConst,
         sum1 = sum1,
         sum2 = sum2,
         sum3 = sum3,
-        incomes = incomeConst, expenses = expenseConst,
+        incomes = futureIncome, expenses = futureExpense,
         periodHalfYear = sumHalfYear,
         periodFirstYear = sumYear,
         periodSecondYear = sumSecondYear
@@ -145,18 +171,19 @@ fun updateXXX() {
     }
 }
 
-private fun updateStroke(oldValue: Int, newSaldoCell: SaldoCell, parentIndex: Int) {
+private fun updateStroke(oldSaldo: SaldoCell, newSaldoCell: SaldoCell, parentIndex: Int) {
     if (newSaldoCell.amount == null) return
+
     stateFall[parentIndex].forEachIndexed { index, i ->
-        if (i.amount == oldValue) {
+
+        if (i == oldSaldo) {
             stateFall[parentIndex][index] = newSaldoCell
             println("updateStroke:> ${stateFall[parentIndex].map { it.amount }.joinToString()}")
             updateXXX()
             return
         }
     }
-
-
+    stateFall[parentIndex].sortedBy { it.amount }
 }
 
 private fun addNewSaldo() {
@@ -177,6 +204,7 @@ private fun addNewCell(newValue: SaldoCell?, parentIndex: Int) {
         stateFall.add(newArrayList)
     } else {
         stateFall[parentIndex].add(newValue)
+        stateFall[parentIndex].sortedBy { it.amount }
 
         if (newValue.isConst) {
             var afterMatchCurrentMonth = false
@@ -198,10 +226,10 @@ private fun addNewCell(newValue: SaldoCell?, parentIndex: Int) {
     updateXXX()
 }
 // TODO need check:
-private fun deleteCell(monthIndex: Int, value: SaldoCell, andFuture: Boolean = false) {
+private fun deleteCell(monthIndex: Int, saldoCell: SaldoCell, andFuture: Boolean = false) {
     if (monthIndex < stateFall.size) {
         //stateFall[monthIndex] = ArrayList(stateFall[monthIndex].minus(element = value))
-        stateFall[monthIndex].remove(element = value)
+        stateFall[monthIndex].remove(element = saldoCell)
 //        stateFall[monthIndex].forEachIndexed { index, saldoCell ->
 //            if ()
 //            stateFall[monthIndex].removeAt(index)
@@ -210,12 +238,12 @@ private fun deleteCell(monthIndex: Int, value: SaldoCell, andFuture: Boolean = f
             // remove in another saldo`s
             stateFall[monthIndex].forEachIndexed { indexY, ints ->
                 if (indexY != monthIndex && stateFall.size > indexY) {
-                    stateFall[indexY] = ArrayList(stateFall[indexY].minus(value))
+                    stateFall[indexY] = ArrayList(stateFall[indexY].minus(saldoCell))
                 }
             }
         }
         //return this
-        println("safeDelete: [$value] ${stateFall.joinToString()}")
+        println("safeDelete: [$saldoCell] ${stateFall.joinToString()}")
     }else {
         //return arrayListOf()
         println("ERROR Y >")
@@ -318,7 +346,7 @@ fun AppX2() {
                                 modifier = Modifier.fillMaxSize().padding(top = 15.dp), horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Row(
-                                    Modifier.weight(3f).background(Color.Green))
+                                    Modifier.weight(3f).background(colorDebit))
                                 {
                                     LazyColumn {
                                         itemsIndexed(
@@ -336,15 +364,11 @@ fun AppX2() {
                                 }
 
                                 // SUMMA:
-                                Row(Modifier.weight(1f), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                                    Column(Modifier.padding(end = 10.dp)) {
+                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.SpaceBetween) {
+                                    Row(modifier = Modifier.fillMaxWidth().background(colorDebitResult)) {
                                         Text("Σ Income: ${if (res.value.size > parentIndex) res.value[parentIndex].income else 0}", modifier = Modifier.padding(vertical = 2.dp),
                                             fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
                                             //color = Color.Green
-                                        )
-                                        Text("Σ Expense: ${if (res.value.size > parentIndex) res.value[parentIndex].expense else 0}", modifier = Modifier.padding(vertical = 2.dp),
-                                            fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
-                                            //color = Color.Red
                                         )
                                     }
 
@@ -356,17 +380,26 @@ fun AppX2() {
                                         fontFamily = FontFamily.Default, fontSize = 25.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
                                         color = Color.DarkGray
                                     )
-
-
+                                    Row(modifier = Modifier.fillMaxWidth().background(colorCreditResult)) {
+                                        Text(
+                                            "Σ Expense: ${if (res.value.size > parentIndex) res.value[parentIndex].expense else 0}",
+                                            modifier = Modifier.padding(vertical = 2.dp),
+                                            fontFamily = FontFamily.Default,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            textAlign = TextAlign.Center,
+                                            //color = Color.Red
+                                        )
+                                    }
                                 }
 
                                 Row(
-                                    Modifier.weight(3f).background(Color.Red)
+                                    Modifier.weight(3f).background(colorCredit)
                                 ) {
                                     LazyColumn {
                                         itemsIndexed(parentItem.filter { it.amount < 0 }, itemContent = { index, itemStroke ->
                                             //Text(">${item}")
-                                            strokeAgregator(itemStroke, parentIndex, index, isIncome = true)
+                                            strokeAgregator(itemStroke, parentIndex, index, isIncome = false)
 
                                         })
                                         // circle "plus" for add new stroke of Saldo
@@ -416,6 +449,8 @@ fun AppX2() {
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome: Boolean = true) {
+    if (!stateFall[parentIndex].contains(saldoCell)) return
+
     val oldvalue = saldoCell.amount
     var isEdit = remember { mutableStateOf(false) }
     var detailShow = remember { mutableStateOf(false) }
@@ -426,52 +461,46 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
     LaunchedEffect(isEditMode.value) {
         if (!isEditMode.value) {
             if (isEdit.value) {
-                updateStroke(oldValue = oldvalue, newSaldoCell = SaldoCell(amount = saldoStrokeAmount.value.toInt(), name = saldoStrokeName.value), parentIndex,)
+                updateStroke(oldSaldo = saldoCell, newSaldoCell = SaldoCell(amount = saldoStrokeAmount.value.toInt(), name = saldoStrokeName.value, saldoCell.isConst), parentIndex,)
                 isEdit.value = false
             }
         }
     }
-    Card (Modifier.fillMaxWidth().padding(1.dp), shape = RoundedCornerShape(5.dp),
+    Card (Modifier.fillMaxWidth().padding(1.dp),
+        shape = RoundedCornerShape(5.dp),
         elevation = 10.dp) {
 
         Column(
             Modifier.fillMaxSize()//.width(100.dp)
-                .background(Color.White)
-
-//        .onPointerEvent(PointerEventType.Enter) {
-//            val position = it.changes.first().position
-//            //println("posss ${position.toString()}")
-//            isShowRemoveIcon.value = true
-//        }.onPointerEvent(PointerEventType.Exit) {
-//            val position = it.changes.first().position
-//            //println("posss ${position.toString()}")
-//            isShowRemoveIcon.value = false
-//        }
+                .background(if (isIncome) colorDebitCard else colorCreditCard)
         ) {
             if (isEdit.value) {
                 TextField(
                     modifier = Modifier.fillMaxWidth()//.height(40.dp)
-                        .background(Color.Magenta),
+                        .background(if (isIncome) colorDebitCard else colorCreditCard),
                     value = saldoStrokeAmount.value.toString(),
                     onValueChange = {
                         val newNum = it.filter { it.isDigit() }
                         if (newNum.isNotEmpty()) {
-                            saldoStrokeAmount.value = it
+                            saldoStrokeAmount.value = newNum
                         }
                         //println("->>${currentBudgetX.value.joinToString()}")
                         //println("stroke ${saldoStrokeAmount.value} ${CalcModule2.currentBudgetX.value.joinToString()}")
                     },
                     textStyle = TextStyle.Default.copy(fontSize = 15.sp)
                 )
-                Row(Modifier.clickable { deleteCell(monthIndex = parentIndex, value = saldoCell) }) {
-                    Text("Delete", fontSize = 10.sp)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    Row(Modifier.clickable { deleteCell(monthIndex = parentIndex, saldoCell = saldoCell) }) {
+                        Text("❌", fontSize = 20.sp)
+                    }
+                    Row(Modifier.clickable { deleteCell(monthIndex = parentIndex, saldoCell = saldoCell, true) }) {
+                        Text("❌\uD83D\uDD1C", fontSize = 20.sp)
+                    }
                 }
-                Row(Modifier.clickable { deleteCell(monthIndex = parentIndex, value = saldoCell, true) }) {
-                    Text("Delete and future", fontSize = 10.sp)
-                }
+
             } else {
                 val text1 = buildAnnotatedString {
-                    append("${saldoCell.amount} ${if (saldoCell.isConst) "✅" else ""} ")
+                    append("${saldoCell.amount} ${if (saldoCell.isConst) "\uD83D\uDD04" else ""} ")
                     withStyle(SpanStyle(color = Color.LightGray)) {
                         append("\n" + "${saldoCell.name}")
                     }
@@ -496,7 +525,7 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                     }
                 ) {
                     if (!detailShow.value) {
-                        Text(modifier = Modifier.padding(start = 5.dp), text = "${saldoCell.amount} ${if (saldoCell.isConst) "✅" else ""}")
+                        Text(modifier = Modifier.padding(start = 5.dp), text = "${saldoCell.amount} ${if (saldoCell.isConst) "\uD83D\uDD04" else ""}")
                     } else {
                         Text(modifier = Modifier.padding(start = 5.dp), text =text1)
                     }
@@ -555,24 +584,28 @@ private fun plusik(isIncome: Boolean = true, parentIndex: Int) {
             Column {
                 TextField(
                     modifier = Modifier.fillMaxWidth()//.height(40.dp)
-                        .background(Color.Magenta),
+                        .background(Color.Transparent),
                     //value = newCellSaldo.value.amount.toString(),
                     value = saldoStrokeAmount.value,
                     onValueChange = {
-                        if (it.isNotEmpty()) {
-                            //newCellSaldo.value.amount = it.toInt()
-                            saldoStrokeAmount.value = it
-                            //isEditByHuman.value = true
+                        val newNum = it.filter { it.isDigit() }
+                        if (newNum.isNotEmpty()) {
+                            saldoStrokeAmount.value = newNum
                         }
+//                        if (it.isNotEmpty()) {
+//                            //newCellSaldo.value.amount = it.toInt()
+//                            saldoStrokeAmount.value = it
+//                            //isEditByHuman.value = true
+//                        }
 
 
                     },
-                    label = { Text("Enter new amount", fontSize = 15.sp) },
+                    label = { Text("Enter new amount", fontSize = 10.sp) },
                     textStyle = TextStyle.Default.copy(fontSize = 12.sp)
                 )
                 TextField(
                     modifier = Modifier.fillMaxWidth()//.height(40.dp)
-                        .background(Color.Magenta),
+                        .background(Color.Transparent),
                     value = saldoStrokeName.value?:"",
 
                     onValueChange = {
@@ -582,7 +615,7 @@ private fun plusik(isIncome: Boolean = true, parentIndex: Int) {
                             //isEditByHuman.value = true
                         }
                     },
-                    label = { Text("Enter name for source of amount", fontSize = 15.sp) },
+                    label = { Text("Enter name for source of amount", fontSize = 10.sp) },
                     textStyle = TextStyle.Default.copy(fontSize = 10.sp),
 
                 )
@@ -596,7 +629,7 @@ private fun plusik(isIncome: Boolean = true, parentIndex: Int) {
                         },
                         modifier = Modifier.size(20.dp)
                     )
-                    Text(modifier = Modifier.padding(start = 5.dp), text = "is is permanent ${if(isIncome) "income" else "expense"}", fontSize = 12.sp)
+                    Text(modifier = Modifier.padding(start = 5.dp, bottom = 10.dp), text = "is is permanent ${if(isIncome) "income" else "expense"}", fontSize = 12.sp)
                 }
             }
 
