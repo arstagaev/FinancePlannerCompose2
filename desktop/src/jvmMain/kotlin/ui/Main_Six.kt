@@ -3,19 +3,23 @@ package ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -141,11 +145,11 @@ fun updateXXX() {
     }
 }
 
-private fun updateStroke(oldValue: Int, newValue: Int?, parentIndex: Int) {
-    if (newValue == null) return
+private fun updateStroke(oldValue: Int, newSaldoCell: SaldoCell, parentIndex: Int) {
+    if (newSaldoCell.amount == null) return
     stateFall[parentIndex].forEachIndexed { index, i ->
         if (i.amount == oldValue) {
-            stateFall[parentIndex][index].amount = newValue
+            stateFall[parentIndex][index] = newSaldoCell
             println("updateStroke:> ${stateFall[parentIndex].map { it.amount }.joinToString()}")
             updateXXX()
             return
@@ -302,9 +306,9 @@ fun AppX2() {
                         modifier = Modifier
                             .width(150.dp)
                             .padding(5.dp),
-                        elevation = 10.dp
+                        //elevation = 10.dp
                     ) {
-                        Box(Modifier.fillMaxSize().clickable {  }) {
+                        Box(Modifier.fillMaxSize().background(Color.LightGray).clickable {  }) {
                             Text("${parentItem.size} ${parentIndex}", modifier = Modifier.fillMaxSize().padding(top = (1).dp,start = 0.dp).align(Alignment.TopCenter),
                                 fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Light,
                                 color = Color.LightGray
@@ -332,25 +336,28 @@ fun AppX2() {
                                 }
 
                                 // SUMMA:
-                                Column(Modifier.weight(1f).background(Color.White), verticalArrangement = Arrangement.Center) {
-                                    Text("${if (res.value.size > parentIndex) res.value[parentIndex].income else 0}", modifier = Modifier.padding(vertical = 2.dp),
-                                        fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
-                                        color = Color.Green
-                                    )
+                                Row(Modifier.weight(1f), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+                                    Column(Modifier.padding(end = 10.dp)) {
+                                        Text("Σ Income: ${if (res.value.size > parentIndex) res.value[parentIndex].income else 0}", modifier = Modifier.padding(vertical = 2.dp),
+                                            fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
+                                            //color = Color.Green
+                                        )
+                                        Text("Σ Expense: ${if (res.value.size > parentIndex) res.value[parentIndex].expense else 0}", modifier = Modifier.padding(vertical = 2.dp),
+                                            fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
+                                            //color = Color.Red
+                                        )
+                                    }
+
                                     Text("${ if (res.value.size > parentIndex) res.value[parentIndex].sum else 0}", modifier = Modifier.padding(vertical = 5.dp).clickable {
                                         GlobalScope.async {
-                                            //waterFall.emit(arrayListOf())
-                                            waterFall.emit(arrayListOf())
-                                            println("update-> ${stateFall.joinToString()}")
+                                            updateXXX()
                                         }
                                     },
-                                        fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
-                                        color = Color.Blue
+                                        fontFamily = FontFamily.Default, fontSize = 25.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
+                                        color = Color.DarkGray
                                     )
-                                    Text("${if (res.value.size > parentIndex) res.value[parentIndex].expense else 0}", modifier = Modifier.padding(vertical = 2.dp),
-                                        fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
-                                        color = Color.Red
-                                    )
+
+
                                 }
 
                                 Row(
@@ -411,34 +418,37 @@ fun AppX2() {
 fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome: Boolean = true) {
     val oldvalue = saldoCell.amount
     var isEdit = remember { mutableStateOf(false) }
+    var detailShow = remember { mutableStateOf(false) }
     var saldoStrokeAmount = remember { mutableStateOf("${saldoCell.amount}") }
+    var saldoStrokeName = remember { mutableStateOf("${saldoCell.name}") }
     var isShowRemoveIcon = remember { mutableStateOf(false) }
 
     LaunchedEffect(isEditMode.value) {
         if (!isEditMode.value) {
             if (isEdit.value) {
-                updateStroke(oldValue = oldvalue, newValue = saldoStrokeAmount.value.toInt(), parentIndex,)
+                updateStroke(oldValue = oldvalue, newSaldoCell = SaldoCell(amount = saldoStrokeAmount.value.toInt(), name = saldoStrokeName.value), parentIndex,)
                 isEdit.value = false
             }
         }
     }
+    Card (Modifier.fillMaxWidth().padding(1.dp), shape = RoundedCornerShape(5.dp),
+        elevation = 10.dp) {
 
-    Box(Modifier.fillMaxWidth()//.width(100.dp)
-        .background(Color.LightGray)
-        .onPointerEvent(PointerEventType.Enter) {
-            val position = it.changes.first().position
-            //println("posss ${position.toString()}")
-            isShowRemoveIcon.value = true
-        }.onPointerEvent(PointerEventType.Exit) {
-            val position = it.changes.first().position
-            //println("posss ${position.toString()}")
-            isShowRemoveIcon.value = false
-        }
-    ) {
-        if (isEdit.value) {
-            Column(Modifier.fillMaxWidth().background(Color.Magenta).clickable {
+        Column(
+            Modifier.fillMaxSize()//.width(100.dp)
+                .background(Color.White)
 
-            }) {
+//        .onPointerEvent(PointerEventType.Enter) {
+//            val position = it.changes.first().position
+//            //println("posss ${position.toString()}")
+//            isShowRemoveIcon.value = true
+//        }.onPointerEvent(PointerEventType.Exit) {
+//            val position = it.changes.first().position
+//            //println("posss ${position.toString()}")
+//            isShowRemoveIcon.value = false
+//        }
+        ) {
+            if (isEdit.value) {
                 TextField(
                     modifier = Modifier.fillMaxWidth()//.height(40.dp)
                         .background(Color.Magenta),
@@ -448,46 +458,67 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                         if (newNum.isNotEmpty()) {
                             saldoStrokeAmount.value = it
                         }
-
-
-
                         //println("->>${currentBudgetX.value.joinToString()}")
                         //println("stroke ${saldoStrokeAmount.value} ${CalcModule2.currentBudgetX.value.joinToString()}")
                     },
                     textStyle = TextStyle.Default.copy(fontSize = 15.sp)
                 )
-                Row(Modifier.clickable { deleteCell(monthIndex = parentIndex,value = saldoCell) }) {
+                Row(Modifier.clickable { deleteCell(monthIndex = parentIndex, value = saldoCell) }) {
                     Text("Delete", fontSize = 10.sp)
                 }
-                Row(Modifier.clickable { deleteCell(monthIndex = parentIndex,value = saldoCell,true) }) {
+                Row(Modifier.clickable { deleteCell(monthIndex = parentIndex, value = saldoCell, true) }) {
                     Text("Delete and future", fontSize = 10.sp)
                 }
-            }
-        } else {
-            //println("$it  ${parentItem.joinToString()}")
-            Row(Modifier.fillMaxWidth().clickable {
-                GlobalScope.launch {
-                    isEditMode.value = true
-                    isEdit.value = true
-                    //delay(100)
+            } else {
+                val text1 = buildAnnotatedString {
+                    append("${saldoCell.amount} ${if (saldoCell.isConst) "✅" else ""} ")
+                    withStyle(SpanStyle(color = Color.LightGray)) {
+                        append("\n" + "${saldoCell.name}")
+                    }
+                }
+                Row(Modifier.fillMaxWidth()
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onPress = {},
+                            onDoubleTap = {
+                            },
+                            onLongPress = {
+                                detailShow.value = !detailShow.value
+                            },
+                            onTap = {
+                                GlobalScope.launch {
+                                    isEditMode.value = true
+                                    isEdit.value = true
+                                    //delay(100)
+                                }
+                            }
+                        )
+                    }
+                ) {
+                    if (!detailShow.value) {
+                        Text(modifier = Modifier.padding(start = 5.dp), text = "${saldoCell.amount} ${if (saldoCell.isConst) "✅" else ""}")
+                    } else {
+                        Text(modifier = Modifier.padding(start = 5.dp), text =text1)
+                    }
+
                 }
 
-            }) {
-                Text("${saldoCell.amount} ${if (saldoCell.isConst) "✅" else ""}")
+
             }
-        }
 //        if (isShowRemoveIcon.value) {
 //            Box(Modifier.fillMaxSize().align(Alignment.CenterEnd).background(Color.Red)
 //                .clickable {
 //                    deleteCell(monthIndex = parentIndex,value = saldoStrokeAmount.value)
 //                })
 //        }
+        }
     }
 }
 
 @Composable
 private fun plusik(isIncome: Boolean = true, parentIndex: Int) {
     var saldoStrokeAmount = remember { mutableStateOf("") }
+    var saldoStrokeName = remember { mutableStateOf("") }
     val checkedState = remember { mutableStateOf(false) }
     //var saldoStrokeName = remember { mutableStateOf("") }
     var isEdit = remember { mutableStateOf(false) }
@@ -501,7 +532,7 @@ private fun plusik(isIncome: Boolean = true, parentIndex: Int) {
                 println("Prep1 ${newValue} ${checkedState.value}")
 
                 //addNewCell(SaldoCell(amount = newValue * if(isIncome) 1 else -1), parentIndex)
-                addNewCell(newCellSaldo.value.copy(amount = newValue * if (isIncome) 1 else -1, isConst = checkedState.value), parentIndex)
+                addNewCell(newCellSaldo.value.copy(amount = newValue * if (isIncome) 1 else -1, isConst = checkedState.value, name = saldoStrokeName.value), parentIndex)
 
                 newCellSaldo.value.amount = 0
                 isEdit.value = false
@@ -542,11 +573,12 @@ private fun plusik(isIncome: Boolean = true, parentIndex: Int) {
                 TextField(
                     modifier = Modifier.fillMaxWidth()//.height(40.dp)
                         .background(Color.Magenta),
-                    value = newCellSaldo.value.name?:"",
+                    value = saldoStrokeName.value?:"",
 
                     onValueChange = {
                         if (it.isNotEmpty()) {
-                            newCellSaldo.value.name = it
+                            saldoStrokeName.value = it
+                            //newCellSaldo.value.name = it
                             //isEditByHuman.value = true
                         }
                     },
