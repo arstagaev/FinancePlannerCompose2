@@ -15,7 +15,7 @@ kotlin {
     jvm("desktop") {
         jvmToolchain(11)
     }
-    val serialization_version = "1.6.0-RC"
+    val serialization_version = "1.5.1"
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -34,6 +34,7 @@ kotlin {
         }
         val androidMain by getting {
             dependencies {
+
                 api("androidx.appcompat:appcompat:1.5.1")
                 api("androidx.core:core-ktx:1.9.0")
             }

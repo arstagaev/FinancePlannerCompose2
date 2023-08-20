@@ -34,6 +34,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
+import kotlinx.serialization.Serializable
 
 val colorDebit = Color(0xFF57DE5d)//Color(68,220,96)
 val colorCredit = Color(0xFFDE7171)//Color(220,63,96)
@@ -48,34 +49,41 @@ val colorTextDebitTitle = Color(12, 144, 63 )
 val colorTextCreditTitle = Color(144, 12, 63 )
 
 var ShowWithDescription = true
-
-private val waterFall = MutableSharedFlow<ArrayList<ArrayList<SaldoCell>>>()
-private val resultFall = MutableSharedFlow<ArrayList<ResultSaldo>>()
-val futureFall = mutableStateOf<FutureSaldo?>(null)
-private var stateFall = arrayListOf<ArrayList<SaldoCell>>(
+var stateFall = arrayListOf<ArrayList<SaldoCell>>(
     arrayListOf(SaldoCell(amount = 1), SaldoCell(amount = 1), SaldoCell(1), SaldoCell(1)),
     arrayListOf(SaldoCell(amount = 1), SaldoCell(amount = 1), SaldoCell(1), SaldoCell(-1)),
     arrayListOf(SaldoCell(amount = 12), SaldoCell(amount = 1), SaldoCell(1, isConst = true), SaldoCell(111))
 )
-private var resultArray = arrayListOf<ResultSaldo>()
-
-var isEditMode = mutableStateOf(false)
-private val startDate = kotlinx.datetime.LocalDate(2023,1,1)//LocalDateTime.of(2023,1,1)
 var configurationOfSaldo = mutableStateOf<SaldoConfiguration>(
     SaldoConfiguration(
         investmentsAmount = 1000,
         investmentsName = "Test"
     )
 )
+
+private val waterFall = MutableSharedFlow<ArrayList<ArrayList<SaldoCell>>>()
+private val resultFall = MutableSharedFlow<ArrayList<ResultSaldo>>()
+val futureFall = mutableStateOf<FutureSaldo?>(null)
+
+private var resultArray = arrayListOf<ResultSaldo>()
+
+var isEditMode = mutableStateOf(false)
+private val startDate = kotlinx.datetime.LocalDate(2023,1,1)//LocalDateTime.of(2023,1,1)
+
+@Serializable
+data class SaveContainer(val data: ArrayList<ArrayList<SaldoCell>>)
+
+@Serializable
 data class SaldoConfiguration(
     val investmentsAmount: Int,
     val investmentsName: String,
 )
+
 data class ResultSaldo(
     val date: LocalDate? = null, val income: Int, val sum: Int, val expense: Int//, var isForecast: Boolean = false//, val arrayIncome: ArrayList<Int>, val arrayExpense: ArrayList<Int>
 )
-data class FutureSaldo(
 
+data class FutureSaldo(
     val income: Int,
     var startForecastDate: LocalDate? = null,
     val sum1: Int,
@@ -87,9 +95,15 @@ data class FutureSaldo(
     var periodSecondYear: Int? = null,
 )
 
+@Serializable
 data class SaldoCell(var amount: Int, var name: String = "", var isConst: Boolean = false)
 
-fun updateXXX() {
+fun initital() {
+    decodeFromFile()
+    updateWhole()
+}
+fun updateWhole() {
+
     var investments = configurationOfSaldo.value.investmentsAmount
     resultArray.clear()
 
@@ -139,15 +153,9 @@ fun updateXXX() {
         cumulative += deltaForFuture
 
         when(it) {
-            6 -> {
-                sumHalfYear = cumulative
-            }
-            12 -> {
-                sumYear = cumulative
-            }
-            24 -> {
-                sumSecondYear = cumulative
-            }
+            6 -> sumHalfYear = cumulative
+            12 -> sumYear = cumulative
+            24 -> sumSecondYear = cumulative
             else -> {}
         }
     }
@@ -186,7 +194,7 @@ private fun updateStroke(oldSaldo: SaldoCell, newSaldoCell: SaldoCell, parentInd
         if (i == oldSaldo) {
             stateFall[parentIndex][index] = newSaldoCell
             println("updateStroke:> ${stateFall[parentIndex].map { it.amount }.joinToString()}")
-            updateXXX()
+            updateWhole()
             return
         }
     }
@@ -198,7 +206,7 @@ private fun addNewSaldo() {
 
     stateFall.add(toFuture as ArrayList<SaldoCell>)
 
-    updateXXX()
+    updateWhole()
 }
 
 private fun addNewCell(newValue: SaldoCell?, parentIndex: Int) {
@@ -227,10 +235,9 @@ private fun addNewCell(newValue: SaldoCell?, parentIndex: Int) {
                 }
             }
         }
-
     }
     println("const:${newValue.isConst} addNewStroke[ ${stateFall.joinToString()} ] ")
-    updateXXX()
+    updateWhole()
 }
 // TODO need check:
 private fun deleteCell(monthIndex: Int, saldoCell: SaldoCell, andFuture: Boolean = false) {
@@ -252,10 +259,9 @@ private fun deleteCell(monthIndex: Int, saldoCell: SaldoCell, andFuture: Boolean
         }
         println("safeDelete: [$saldoCell] ${stateFall.joinToString()}")
     } else {
-        //return arrayListOf()
         println("ERROR Y >")
     }
-    updateXXX()
+    updateWhole()
 }
 
 @Composable
@@ -263,7 +269,7 @@ fun AppX2() {
 
     LaunchedEffect(true) {
         println("At start: ${stateFall.joinToString()}")
-        updateXXX()
+        updateWhole()
         //tester1()
     }
     val iem = remember { isEditMode }
@@ -283,9 +289,10 @@ fun AppX2() {
                     isEditMode.value = false
                     //actionSave.value = true
                     println("refresh-> ${stateFall.joinToString()}")
-                    updateXXX()
+                    updateWhole()
                 }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically
             ) {
+                encodeForSave()
                 Text("Recalculate", fontSize = 30.sp)
             }
         }
@@ -350,7 +357,7 @@ fun AppX2() {
 
                                     Text("${ if (res.value.size > parentIndex) res.value[parentIndex].sum else 0}", modifier = Modifier.padding(vertical = 5.dp).clickable {
                                         GlobalScope.async {
-                                            updateXXX()
+                                            updateWhole()
                                         }
                                     },
                                         fontFamily = FontFamily.Default, fontSize = 25.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
@@ -635,7 +642,7 @@ private fun tester1() {
                 arrayListOf(SaldoCell(1), SaldoCell(amount = (-20..30).random())),
                 arrayListOf(SaldoCell(1), SaldoCell(amount = (-30..40).random())),
             )
-            updateXXX()
+            updateWhole()
             delay(10)
         }
     }

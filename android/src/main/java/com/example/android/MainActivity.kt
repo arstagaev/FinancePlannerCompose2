@@ -6,10 +6,12 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.MaterialTheme
 import com.example.common.AppX2
+import com.example.common.initital
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        initital()
         setContent {
             MaterialTheme {
                 //App()

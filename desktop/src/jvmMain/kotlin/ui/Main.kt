@@ -3,7 +3,8 @@ package ui
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.example.common.AppX2
-import com.example.common.updateXXX
+import com.example.common.initital
+import com.example.common.updateWhole
 
 
 
@@ -16,7 +17,7 @@ fun main() = application {
         //Test()
         //Tester()
         //TesterThree()
-        updateXXX()
+        initital()
         AppX2()
     }
 }

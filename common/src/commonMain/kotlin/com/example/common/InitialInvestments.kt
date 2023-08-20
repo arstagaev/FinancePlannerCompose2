@@ -35,7 +35,7 @@ fun InitialInvestments() {
     LaunchedEffect(isEditMode.value) {
         if (!isEditMode.value) {
             if (isEditLocal.value) {
-                updateXXX()
+                updateWhole()
                 configurationOfSaldo.value = SaldoConfiguration(investmentsName = saldoStrokeName.value, investmentsAmount = saldoStrokeAmount.value.toInt())
                 isEditLocal.value = false
             }

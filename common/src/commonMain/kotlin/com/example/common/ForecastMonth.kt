@@ -82,7 +82,7 @@ fun forecastGhostMonth(
                         else -> futureSaldo.value?.sum3
                     }}", modifier = Modifier.padding(vertical = 5.dp).clickable {
                         GlobalScope.async {
-                            updateXXX()
+                            updateWhole()
                         }
                     },
                         fontFamily = FontFamily.Default, fontSize = 25.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
