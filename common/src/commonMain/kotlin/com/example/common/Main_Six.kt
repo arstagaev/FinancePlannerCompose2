@@ -1,4 +1,4 @@
-package ui
+package com.example.common
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -31,30 +31,37 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.plus
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
-val colorDebit = Color(68,242,96)
-val colorCredit = Color(242,63,96)
+val colorDebit = Color(68,220,96)
+val colorCredit = Color(220,63,96)
 
 val colorDebitResult = Color(68,200,96)
 val colorCreditResult = Color(200,63,96)
 
-val colorDebitCard = Color(204,255,229)
-val colorCreditCard = Color(255,204,204)
+val colorDebitStroke = Color(204,255,229)
+val colorCreditStroke = Color(255,204,204)
+
+var ShowWithDescription = true
 
 private val waterFall = MutableSharedFlow<ArrayList<ArrayList<SaldoCell>>>()
 private val resultFall = MutableSharedFlow<ArrayList<ResultSaldo>>()
 val futureFall = mutableStateOf<FutureSaldo?>(null)
 private var stateFall = arrayListOf<ArrayList<SaldoCell>>(
-    arrayListOf(SaldoCell(amount = 1),SaldoCell(amount = 1),SaldoCell(1),SaldoCell(1)),
-    arrayListOf(SaldoCell(amount = 1),SaldoCell(amount = 1),SaldoCell(1),SaldoCell(-1)),
-    arrayListOf(SaldoCell(amount = 12),SaldoCell(amount = 1),SaldoCell(1, isConst = true),SaldoCell(111))
+    arrayListOf(SaldoCell(amount = 1), SaldoCell(amount = 1), SaldoCell(1), SaldoCell(1)),
+    arrayListOf(SaldoCell(amount = 1), SaldoCell(amount = 1), SaldoCell(1), SaldoCell(-1)),
+    arrayListOf(SaldoCell(amount = 12), SaldoCell(amount = 1), SaldoCell(1, isConst = true), SaldoCell(111))
 )
 private var resultArray = arrayListOf<ResultSaldo>()
 
 private var isEditMode = mutableStateOf(false)
-
+private val startDate = kotlinx.datetime.LocalDate(2023,1,1)//LocalDateTime.of(2023,1,1)
 data class ResultSaldo(
-    val income: Int, val sum: Int, val expense: Int//, var isForecast: Boolean = false//, val arrayIncome: ArrayList<Int>, val arrayExpense: ArrayList<Int>
+    val date: String, val income: Int, val sum: Int, val expense: Int//, var isForecast: Boolean = false//, val arrayIncome: ArrayList<Int>, val arrayExpense: ArrayList<Int>
 )
 data class FutureSaldo(
     val investments: Int,
@@ -68,7 +75,7 @@ data class FutureSaldo(
     var periodSecondYear: Int? = null,
 )
 
-data class SaldoCell(var amount: Int, var name: String? = null, var isConst: Boolean = false)
+data class SaldoCell(var amount: Int, var name: String = "", var isConst: Boolean = false)
 
 fun updateXXX() {
     var investments = 100
@@ -92,8 +99,9 @@ fun updateXXX() {
         var expense = expList.sumOf { it.amount }
 
         lastSum += income + expense
+        val dt = startDate.plus(DatePeriod(months = index))
+        resultArray.add(ResultSaldo(date = "${dt.year} ${dt.month}", income = income, sum = lastSum, expense = expense))
 
-        resultArray.add(ResultSaldo(income = income, sum = lastSum, expense = expense))
         if (index == stateFall.size-1) {
             futureIncome = incList.filter { it.isConst }.map { it.amount }
             futureExpense = expList.filter { it.isConst }.map { it.amount }
@@ -229,22 +237,34 @@ private fun addNewCell(newValue: SaldoCell?, parentIndex: Int) {
 private fun deleteCell(monthIndex: Int, saldoCell: SaldoCell, andFuture: Boolean = false) {
     if (monthIndex < stateFall.size) {
         //stateFall[monthIndex] = ArrayList(stateFall[monthIndex].minus(element = value))
-        stateFall[monthIndex].remove(element = saldoCell)
+        val indexRemovedElement = stateFall[monthIndex].indexOf(saldoCell)
+        stateFall[monthIndex].removeAt(indexRemovedElement)
+
 //        stateFall[monthIndex].forEachIndexed { index, saldoCell ->
 //            if ()
 //            stateFall[monthIndex].removeAt(index)
 //        }
         if (andFuture) {
-            // remove in another saldo`s
-            stateFall[monthIndex].forEachIndexed { indexY, ints ->
-                if (indexY != monthIndex && stateFall.size > indexY) {
-                    stateFall[indexY] = ArrayList(stateFall[indexY].minus(saldoCell))
+            stateFall.forEachIndexed { index, saldoCells ->
+                if (index >= monthIndex && stateFall.size > index) {
+                    val ire = stateFall[index].indexOf(saldoCell)
+                    println(">>> ${ire} ${saldoCells.joinToString()}")
+                    if (ire >= 0) {
+                        stateFall[index].removeAt(ire)
+                    }
                 }
             }
+
+            // remove in another saldo`s
+//            stateFall[monthIndex].forEachIndexed { indexY, ints ->
+//                if (indexY != monthIndex && stateFall.size > indexY && indexY >= indexRemovedElement) {
+//                    stateFall[indexY] = ArrayList(stateFall[indexY].minus(saldoCell))
+//                }
+//            }
         }
         //return this
         println("safeDelete: [$saldoCell] ${stateFall.joinToString()}")
-    }else {
+    } else {
         //return arrayListOf()
         println("ERROR Y >")
     }
@@ -337,9 +357,9 @@ fun AppX2() {
                         //elevation = 10.dp
                     ) {
                         Box(Modifier.fillMaxSize().background(Color.LightGray).clickable {  }) {
-                            Text("${parentItem.size} ${parentIndex}", modifier = Modifier.fillMaxSize().padding(top = (1).dp,start = 0.dp).align(Alignment.TopCenter),
+                            Text("${if (res.value.size > parentIndex) res.value[parentIndex].date else ""} ", modifier = Modifier.fillMaxSize().padding(top = (1).dp,start = 10.dp).align(Alignment.TopCenter),
                                 fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Light,
-                                color = Color.LightGray
+                                color = Color.DarkGray
                             )
 
                             Column(
@@ -453,7 +473,7 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
 
     val oldvalue = saldoCell.amount
     var isEdit = remember { mutableStateOf(false) }
-    var detailShow = remember { mutableStateOf(false) }
+    var detailShow = remember { mutableStateOf(ShowWithDescription) }
     var saldoStrokeAmount = remember { mutableStateOf("${saldoCell.amount}") }
     var saldoStrokeName = remember { mutableStateOf("${saldoCell.name}") }
     var isShowRemoveIcon = remember { mutableStateOf(false) }
@@ -466,18 +486,18 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
             }
         }
     }
-    Card (Modifier.fillMaxWidth().padding(1.dp),
+    Card (Modifier.fillMaxWidth().padding(vertical = 1.dp, horizontal = 3.dp),
         shape = RoundedCornerShape(5.dp),
         elevation = 10.dp) {
 
         Column(
             Modifier.fillMaxSize()//.width(100.dp)
-                .background(if (isIncome) colorDebitCard else colorCreditCard)
+                .background(if (isIncome) colorDebitStroke else colorCreditStroke)
         ) {
             if (isEdit.value) {
                 TextField(
                     modifier = Modifier.fillMaxWidth()//.height(40.dp)
-                        .background(if (isIncome) colorDebitCard else colorCreditCard),
+                        .background(if (isIncome) colorDebitStroke else colorCreditStroke),
                     value = saldoStrokeAmount.value.toString(),
                     onValueChange = {
                         val newNum = it.filter { it.isDigit() }
@@ -488,6 +508,21 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                         //println("stroke ${saldoStrokeAmount.value} ${CalcModule2.currentBudgetX.value.joinToString()}")
                     },
                     textStyle = TextStyle.Default.copy(fontSize = 15.sp)
+                )
+                TextField(
+                    modifier = Modifier.fillMaxWidth()//.height(40.dp)
+                        .background(Color.Transparent),
+                    value = saldoStrokeName.value?:"",
+
+                    onValueChange = {
+                        if (it.isNotEmpty()) {
+                            saldoStrokeName.value = it
+                            //newCellSaldo.value.name = it
+                            //isEditByHuman.value = true
+                        }
+                    },
+                    label = { Text("Enter name for source of amount", fontSize = 10.sp) },
+                    textStyle = TextStyle.Default.copy(fontSize = 10.sp),
                 )
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     Row(Modifier.clickable { deleteCell(monthIndex = parentIndex, saldoCell = saldoCell) }) {
@@ -500,7 +535,9 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
 
             } else {
                 val text1 = buildAnnotatedString {
-                    append("${saldoCell.amount} ${if (saldoCell.isConst) "\uD83D\uDD04" else ""} ")
+                    withStyle(SpanStyle(color = if (isIncome) colorDebitResult else colorCreditResult, fontWeight = FontWeight.Bold)) {
+                        append("${saldoCell.amount}")
+                    }
                     withStyle(SpanStyle(color = Color.LightGray)) {
                         append("\n" + "${saldoCell.name}")
                     }
@@ -522,12 +559,14 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                                 }
                             }
                         )
-                    }
+                    }, horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     if (!detailShow.value) {
-                        Text(modifier = Modifier.padding(start = 5.dp), text = "${saldoCell.amount} ${if (saldoCell.isConst) "\uD83D\uDD04" else ""}")
+                        Text(modifier = Modifier.padding(start = 5.dp), text = "${saldoCell.amount} ")
+                        Text(modifier = Modifier.padding(start = 5.dp, end = 5.dp), text ="${if (saldoCell.isConst) "\uD83D\uDD04" else ""}")
                     } else {
                         Text(modifier = Modifier.padding(start = 5.dp), text =text1)
+                        Text(modifier = Modifier.padding(start = 5.dp, end = 5.dp), text ="${if (saldoCell.isConst) "\uD83D\uDD04" else ""}")
                     }
 
                 }
@@ -645,9 +684,9 @@ private fun tester1() {
     GlobalScope.launch {
         repeat(100) {
             stateFall = arrayListOf(
-                arrayListOf(SaldoCell(1),SaldoCell(amount = (-10..20).random())),
-                arrayListOf(SaldoCell(1),SaldoCell(amount = (-20..30).random())),
-                arrayListOf(SaldoCell(1),SaldoCell(amount = (-30..40).random())),
+                arrayListOf(SaldoCell(1), SaldoCell(amount = (-10..20).random())),
+                arrayListOf(SaldoCell(1), SaldoCell(amount = (-20..30).random())),
+                arrayListOf(SaldoCell(1), SaldoCell(amount = (-30..40).random())),
             )
             updateXXX()
             delay(10)
