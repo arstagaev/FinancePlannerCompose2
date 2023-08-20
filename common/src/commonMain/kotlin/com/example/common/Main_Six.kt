@@ -289,53 +289,18 @@ fun AppX2() {
                 Text("Recalculate", fontSize = 30.sp)
             }
         }
-        LazyRow(Modifier.background(colorBackgroundDark2)) {
+        LazyRow(Modifier.background(
+            Color.White
+            //colorBackgroundDark2
+        )) {
 //            itemsIndexed(col.value, itemContent = {parentIndex, parentItem ->
 //                monthZero(parentItem, parentIndex)
 //            })
             item {
                 InitialInvestments()
-//                var futureSaldo = remember { futureFall }
-//                val textInvest = buildAnnotatedString {
-//                    withStyle(SpanStyle(color = Color.Blue)) {
-//                        append("Initial investments:")
-//                    }
-//                    append("\n" + "${futureSaldo.value?.investments}")
-//                }
-//                Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Center) {
-//                    Card(
-//                        modifier = Modifier
-//                            .width(150.dp)
-//                            .height(100.dp)
-//                            .padding(5.dp),
-//                        elevation = 10.dp
-//                    ) {
-//                        Box(Modifier.fillMaxSize()) {
-//                            Text(textInvest,
-//                                modifier = Modifier.padding(4.dp).align(Alignment.Center)
-//                                    .clickable {},
-//                                fontSize = 10.sp, fontFamily = FontFamily.Monospace,
-//                                //color = Color.Black,
-//                                textAlign = TextAlign.Center
-//                            )
-//                        }
-//
-//                    }
-//                }
             }
             col.value.forEachIndexed { parentIndex, parentItem ->
                 item {
-                    //monthZero(parentItem, parentIndex)
-//                    var incList = parentItem.filter { it != null && it.amount > 0  }
-//                    var expList = parentItem.filter { it != null && it.amount < 0  }
-//
-//                    var income = remember { mutableStateOf(incList.sum()) }
-//                    var expense = remember { mutableStateOf(expList.sum()) }
-//
-//                    LaunchedEffect(incList, expList) {
-//                        income.value = incList.sum()
-//                        expense.value = expList.sum()
-//                    }
                     val res = resultFall.collectAsState(resultArray)
 
                     Card(
@@ -361,7 +326,7 @@ fun AppX2() {
                                     Spacer(Modifier.fillMaxWidth().height(3.dp))
                                     LazyColumn {
                                         itemsIndexed(
-                                            parentItem.filter { it.amount > 0 },
+                                            parentItem.filter { it.amount > 0 }.sortedByDescending { it.amount },
                                             itemContent = { index, item ->
                                                 strokeAgregator(item, parentIndex, index)
                                                 //Text(">${item}")
@@ -409,7 +374,7 @@ fun AppX2() {
                                 ) {
                                     Spacer(Modifier.fillMaxWidth().height(3.dp))
                                     LazyColumn {
-                                        itemsIndexed(parentItem.filter { it.amount < 0 }, itemContent = { index, itemStroke ->
+                                        itemsIndexed(parentItem.filter { it.amount < 0 }.sortedByDescending { it.amount }, itemContent = { index, itemStroke ->
                                             //Text(">${item}")
                                             strokeAgregator(itemStroke, parentIndex, index, isIncome = false)
 
@@ -567,15 +532,7 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                     }
 
                 }
-
-
             }
-//        if (isShowRemoveIcon.value) {
-//            Box(Modifier.fillMaxSize().align(Alignment.CenterEnd).background(Color.Red)
-//                .clickable {
-//                    deleteCell(monthIndex = parentIndex,value = saldoStrokeAmount.value)
-//                })
-//        }
         }
     }
 }
@@ -628,13 +585,6 @@ private fun plusik(isIncome: Boolean = true, parentIndex: Int) {
                         if (newNum.isNotEmpty()) {
                             saldoStrokeAmount.value = newNum
                         }
-//                        if (it.isNotEmpty()) {
-//                            //newCellSaldo.value.amount = it.toInt()
-//                            saldoStrokeAmount.value = it
-//                            //isEditByHuman.value = true
-//                        }
-
-
                     },
                     label = { Text("Enter new amount", fontSize = 10.sp) },
                     textStyle = TextStyle.Default.copy(fontSize = 12.sp)

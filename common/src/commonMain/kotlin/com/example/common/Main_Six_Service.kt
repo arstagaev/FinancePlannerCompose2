@@ -27,7 +27,6 @@ import kotlinx.datetime.plus
 
 @Composable
 fun forecastGhostMonth(
-    //fs: FutureSaldo
     index: Int
 ) {
     var futureSaldo = remember { futureFall }
@@ -65,10 +64,6 @@ fun forecastGhostMonth(
                                 strokeFutureSaldo(item)
                             }
                         )
-                        // circle "plus" for add new stroke of Saldo
-//                        item {
-//                            plusik(isIncome = true, parentIndex = parentIndex)
-//                        }
                     }
                 }
                 // SUMMA:
@@ -105,43 +100,14 @@ fun forecastGhostMonth(
                         )
                     }
                 }
-                // SUMMA:
-//                Column(Modifier.weight(1f).background(Color.White), verticalArrangement = Arrangement.Center) {
-//                    Text("${futureSaldo.value?.income}", modifier = Modifier.padding(vertical = 2.dp),
-//                        fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
-//                        color = Color.Green
-//                    )
-//                    Text("${when(index) {
-//                        1 -> futureSaldo.value?.sum1
-//                        2 -> futureSaldo.value?.sum2
-//                        3 -> futureSaldo.value?.sum3
-//                        else -> futureSaldo.value?.sum3
-//                    }}", modifier = Modifier.padding(vertical = 5.dp).clickable {},
-//                        fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
-//                        color = Color.Blue
-//                    )
-//                    Text("${futureSaldo.value?.expense}", modifier = Modifier.padding(vertical = 2.dp),
-//                        fontFamily = FontFamily.Default, fontSize = 15.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
-//                        color = Color.Red
-//                    )
-//                }
-
                 Row(
-                    Modifier.weight(3f).background(Color.Red)
+                    Modifier.weight(3f).fillMaxSize().background(Color.Red)
                 ) {
                     LazyColumn {
                         itemsIndexed(futureSaldo.value?.expenses?: listOf(), itemContent = { index, item ->
                             strokeFutureSaldo(item)
-                            //Text(modifier = Modifier.fillMaxWidth(), text = ">${item}")
-                            //strokeAgregator(itemStroke, parentIndex, index, isIncome = true)
-
                         })
-                        // circle "plus" for add new stroke of Saldo
-//                        item {
-//                            plusik(isIncome = false, parentIndex)
-//                        }
                     }
-
                 }
             }
 

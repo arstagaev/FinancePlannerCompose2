@@ -37,7 +37,6 @@ fun InitialInvestments() {
             if (isEditLocal.value) {
                 updateXXX()
                 configurationOfSaldo.value = SaldoConfiguration(investmentsName = saldoStrokeName.value, investmentsAmount = saldoStrokeAmount.value.toInt())
-                //updateStroke(oldSaldo = saldoCell, newSaldoCell = SaldoCell(amount = saldoStrokeAmount.value.toInt(), name = saldoStrokeName.value, saldoCell.isConst), parentIndex,)
                 isEditLocal.value = false
             }
         }
@@ -98,14 +97,6 @@ fun InitialInvestments() {
                         label = { Text("Enter name for source of amount", fontSize = 10.sp) },
                         textStyle = TextStyle.Default.copy(fontSize = 10.sp),
                     )
-//                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-//                    Row(Modifier.clickable { deleteCell(monthIndex = parentIndex, saldoCell = saldoCell) }) {
-//                        Text("❌", fontSize = 20.sp)
-//                    }
-//                    Row(Modifier.clickable { deleteCell(monthIndex = parentIndex, saldoCell = saldoCell, true) }) {
-//                        Text("❌\uD83D\uDD1C", fontSize = 20.sp)
-//                    }
-//                }
 
                 } else {
                     Text(

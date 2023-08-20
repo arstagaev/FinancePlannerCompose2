@@ -90,8 +90,6 @@ fun longForecast() {
                     color = Color.Black, textAlign = TextAlign.Center
                 )
             }
-
-
         }
     }
 }
