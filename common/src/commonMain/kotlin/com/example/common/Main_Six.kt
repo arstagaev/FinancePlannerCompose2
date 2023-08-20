@@ -32,19 +32,20 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
-val colorDebit = Color(68,220,96)
-val colorCredit = Color(220,63,96)
+val colorDebit = Color(0xFF57DE5d)//Color(68,220,96)
+val colorCredit = Color(0xFFDE7171)//Color(220,63,96)
 
 val colorDebitResult = Color(68,200,96)
 val colorCreditResult = Color(200,63,96)
 
 val colorDebitStroke = Color(204,255,229)
 val colorCreditStroke = Color(255,204,204)
+
+val colorTextDebitTitle = Color(12, 144, 63 )
+val colorTextCreditTitle = Color(144, 12, 63 )
 
 var ShowWithDescription = true
 
@@ -58,14 +59,25 @@ private var stateFall = arrayListOf<ArrayList<SaldoCell>>(
 )
 private var resultArray = arrayListOf<ResultSaldo>()
 
-private var isEditMode = mutableStateOf(false)
+var isEditMode = mutableStateOf(false)
 private val startDate = kotlinx.datetime.LocalDate(2023,1,1)//LocalDateTime.of(2023,1,1)
+var configurationOfSaldo = mutableStateOf<SaldoConfiguration>(
+    SaldoConfiguration(
+        investmentsAmount = 1000,
+        investmentsName = "Test"
+    )
+)
+data class SaldoConfiguration(
+    val investmentsAmount: Int,
+    val investmentsName: String,
+)
 data class ResultSaldo(
-    val date: String, val income: Int, val sum: Int, val expense: Int//, var isForecast: Boolean = false//, val arrayIncome: ArrayList<Int>, val arrayExpense: ArrayList<Int>
+    val date: LocalDate? = null, val income: Int, val sum: Int, val expense: Int//, var isForecast: Boolean = false//, val arrayIncome: ArrayList<Int>, val arrayExpense: ArrayList<Int>
 )
 data class FutureSaldo(
-    val investments: Int,
+
     val income: Int,
+    var startForecastDate: LocalDate? = null,
     val sum1: Int,
     val sum2: Int,
     val sum3: Int,
@@ -78,7 +90,7 @@ data class FutureSaldo(
 data class SaldoCell(var amount: Int, var name: String = "", var isConst: Boolean = false)
 
 fun updateXXX() {
-    var investments = 100
+    var investments = configurationOfSaldo.value.investmentsAmount
     resultArray.clear()
 
     // make result
@@ -90,6 +102,7 @@ fun updateXXX() {
     var expConst = 0
     var futureIncome = listOf<Int>()
     var futureExpense = listOf<Int>()
+    var dt: LocalDate? = null
 
     stateFall.forEachIndexed { index, month ->
         var incList = ArrayList(month.filter { it != null && it.amount > 0  })
@@ -99,8 +112,8 @@ fun updateXXX() {
         var expense = expList.sumOf { it.amount }
 
         lastSum += income + expense
-        val dt = startDate.plus(DatePeriod(months = index))
-        resultArray.add(ResultSaldo(date = "${dt.year} ${dt.month}", income = income, sum = lastSum, expense = expense))
+        dt = startDate.plus(DatePeriod(months = index))
+        resultArray.add(ResultSaldo(date = dt, income = income, sum = lastSum, expense = expense))
 
         if (index == stateFall.size-1) {
             futureIncome = incList.filter { it.isConst }.map { it.amount }
@@ -149,8 +162,11 @@ fun updateXXX() {
         }
     }
 
-    var forecast = FutureSaldo(investments = investments,
+    var forecast = FutureSaldo(
+        //investmentsAmount = investments, investmentsName = startInvestmentsName,
+
         income = incConst, expense = expConst,
+        startForecastDate =dt,
         sum1 = sum1,
         sum2 = sum2,
         sum3 = sum3,
@@ -240,10 +256,6 @@ private fun deleteCell(monthIndex: Int, saldoCell: SaldoCell, andFuture: Boolean
         val indexRemovedElement = stateFall[monthIndex].indexOf(saldoCell)
         stateFall[monthIndex].removeAt(indexRemovedElement)
 
-//        stateFall[monthIndex].forEachIndexed { index, saldoCell ->
-//            if ()
-//            stateFall[monthIndex].removeAt(index)
-//        }
         if (andFuture) {
             stateFall.forEachIndexed { index, saldoCells ->
                 if (index >= monthIndex && stateFall.size > index) {
@@ -254,15 +266,7 @@ private fun deleteCell(monthIndex: Int, saldoCell: SaldoCell, andFuture: Boolean
                     }
                 }
             }
-
-            // remove in another saldo`s
-//            stateFall[monthIndex].forEachIndexed { indexY, ints ->
-//                if (indexY != monthIndex && stateFall.size > indexY && indexY >= indexRemovedElement) {
-//                    stateFall[indexY] = ArrayList(stateFall[indexY].minus(saldoCell))
-//                }
-//            }
         }
-        //return this
         println("safeDelete: [$saldoCell] ${stateFall.joinToString()}")
     } else {
         //return arrayListOf()
@@ -286,7 +290,7 @@ fun AppX2() {
 
 
     Column(
-        Modifier//.fillMaxWidth()
+        Modifier//.fillMaxSize().background(colorBackgroundDark)//.fillMaxWidth()
     ) {
         AnimatedVisibility(
             iem.value
@@ -302,38 +306,39 @@ fun AppX2() {
                 Text("Recalculate", fontSize = 30.sp)
             }
         }
-        LazyRow {
+        LazyRow(Modifier.background(colorBackgroundDark2)) {
 //            itemsIndexed(col.value, itemContent = {parentIndex, parentItem ->
 //                monthZero(parentItem, parentIndex)
 //            })
             item {
-                var futureSaldo = remember { futureFall }
-                val textInvest = buildAnnotatedString {
-                    withStyle(SpanStyle(color = Color.Blue)) {
-                        append("Initial investments:")
-                    }
-                    append("\n" + "${futureSaldo.value?.investments}")
-                }
-                Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Center) {
-                    Card(
-                        modifier = Modifier
-                            .width(150.dp)
-                            .height(100.dp)
-                            .padding(5.dp),
-                        elevation = 10.dp
-                    ) {
-                        Box(Modifier.fillMaxSize()) {
-                            Text(textInvest,
-                                modifier = Modifier.padding(4.dp).align(Alignment.Center)
-                                    .clickable {},
-                                fontSize = 10.sp, fontFamily = FontFamily.Monospace,
-                                //color = Color.Black,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-
-                    }
-                }
+                InitialInvestments()
+//                var futureSaldo = remember { futureFall }
+//                val textInvest = buildAnnotatedString {
+//                    withStyle(SpanStyle(color = Color.Blue)) {
+//                        append("Initial investments:")
+//                    }
+//                    append("\n" + "${futureSaldo.value?.investments}")
+//                }
+//                Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+//                    Card(
+//                        modifier = Modifier
+//                            .width(150.dp)
+//                            .height(100.dp)
+//                            .padding(5.dp),
+//                        elevation = 10.dp
+//                    ) {
+//                        Box(Modifier.fillMaxSize()) {
+//                            Text(textInvest,
+//                                modifier = Modifier.padding(4.dp).align(Alignment.Center)
+//                                    .clickable {},
+//                                fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+//                                //color = Color.Black,
+//                                textAlign = TextAlign.Center
+//                            )
+//                        }
+//
+//                    }
+//                }
             }
             col.value.forEachIndexed { parentIndex, parentItem ->
                 item {
@@ -357,7 +362,8 @@ fun AppX2() {
                         //elevation = 10.dp
                     ) {
                         Box(Modifier.fillMaxSize().background(Color.LightGray).clickable {  }) {
-                            Text("${if (res.value.size > parentIndex) res.value[parentIndex].date else ""} ", modifier = Modifier.fillMaxSize().padding(top = (1).dp,start = 10.dp).align(Alignment.TopCenter),
+                            val dt = if (res.value.size > parentIndex) res.value[parentIndex].date else null
+                            Text("${dt?.year} ${dt?.month} ", modifier = Modifier.fillMaxSize().padding(top = (1).dp,start = 10.dp).align(Alignment.TopCenter),
                                 fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Light,
                                 color = Color.DarkGray
                             )
@@ -365,9 +371,11 @@ fun AppX2() {
                             Column(
                                 modifier = Modifier.fillMaxSize().padding(top = 15.dp), horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Row(
+
+                                Column(
                                     Modifier.weight(3f).background(colorDebit))
                                 {
+                                    Spacer(Modifier.fillMaxWidth().height(3.dp))
                                     LazyColumn {
                                         itemsIndexed(
                                             parentItem.filter { it.amount > 0 },
@@ -388,7 +396,7 @@ fun AppX2() {
                                     Row(modifier = Modifier.fillMaxWidth().background(colorDebitResult)) {
                                         Text("Σ Income: ${if (res.value.size > parentIndex) res.value[parentIndex].income else 0}", modifier = Modifier.padding(vertical = 2.dp),
                                             fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
-                                            //color = Color.Green
+                                            color = colorTextDebitTitle
                                         )
                                     }
 
@@ -408,14 +416,15 @@ fun AppX2() {
                                             fontSize = 10.sp,
                                             fontWeight = FontWeight.Bold,
                                             textAlign = TextAlign.Center,
-                                            //color = Color.Red
+                                            color = colorTextCreditTitle
                                         )
                                     }
                                 }
 
-                                Row(
+                                Column(
                                     Modifier.weight(3f).background(colorCredit)
                                 ) {
+                                    Spacer(Modifier.fillMaxWidth().height(3.dp))
                                     LazyColumn {
                                         itemsIndexed(parentItem.filter { it.amount < 0 }, itemContent = { index, itemStroke ->
                                             //Text(">${item}")
@@ -448,7 +457,6 @@ fun AppX2() {
                         Text(modifier = Modifier, text = "+", color= Color.Black,   textAlign = TextAlign.Center)
                     }
                 }
-
             }
             item {
                 forecastGhostMonth(1)
@@ -486,7 +494,7 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
             }
         }
     }
-    Card (Modifier.fillMaxWidth().padding(vertical = 1.dp, horizontal = 3.dp),
+    Card (Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 2.dp, start = 3.dp, end = 3.dp),
         shape = RoundedCornerShape(5.dp),
         elevation = 10.dp) {
 
@@ -525,10 +533,16 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                     textStyle = TextStyle.Default.copy(fontSize = 10.sp),
                 )
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    Row(Modifier.clickable { deleteCell(monthIndex = parentIndex, saldoCell = saldoCell) }) {
+                    Row(Modifier.clickable {
+                        deleteCell(monthIndex = parentIndex, saldoCell = saldoCell)
+                        isEdit.value = false
+                    }) {
                         Text("❌", fontSize = 20.sp)
                     }
-                    Row(Modifier.clickable { deleteCell(monthIndex = parentIndex, saldoCell = saldoCell, true) }) {
+                    Row(Modifier.clickable {
+                        deleteCell(monthIndex = parentIndex, saldoCell = saldoCell, true)
+                        isEdit.value = false
+                    }) {
                         Text("❌\uD83D\uDD1C", fontSize = 20.sp)
                     }
                 }

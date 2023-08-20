@@ -4,6 +4,7 @@ plugins {
     kotlin("multiplatform")
     id("org.jetbrains.compose")
     id("com.android.library")
+    kotlin("plugin.serialization") version "1.9.0"
 }
 
 group = "com.example"
@@ -14,6 +15,7 @@ kotlin {
     jvm("desktop") {
         jvmToolchain(11)
     }
+    val serialization_version = "1.6.0-RC"
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -21,6 +23,8 @@ kotlin {
                 api(compose.foundation)
                 api(compose.material)
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+                // Works as common dependency as well as the platform one
+                implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version")
             }
         }
         val commonTest by getting {

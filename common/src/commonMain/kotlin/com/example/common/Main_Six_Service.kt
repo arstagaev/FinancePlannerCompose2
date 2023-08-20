@@ -9,6 +9,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.plus
 
 @Composable
 fun forecastGhostMonth(
@@ -27,6 +31,12 @@ fun forecastGhostMonth(
     index: Int
 ) {
     var futureSaldo = remember { futureFall }
+    var dt = remember { mutableStateOf("") }
+
+    LaunchedEffect(futureSaldo.value) {
+        var dateCustom = futureSaldo.value?.startForecastDate?.plus(DatePeriod(months = index))
+        dt.value = "${dateCustom?.year} ${dateCustom?.month}"
+    }
     Card(
         modifier = Modifier
             .width(150.dp)
@@ -34,10 +44,10 @@ fun forecastGhostMonth(
         elevation = 10.dp
     ) {
         Box(Modifier.fillMaxSize().clickable {  }) {
-            Text("${futureSaldo.value?.sum1} ${0}", modifier = Modifier.fillMaxSize().padding(top = (1).dp,start = 0.dp).align(
+            Text("${dt?.value}", modifier = Modifier.fillMaxSize().padding(top = (1).dp,start = 10.dp).align(
                 Alignment.TopCenter),
                 fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Light,
-                color = Color.LightGray
+                color = Color.DarkGray
             )
 
             Column(
