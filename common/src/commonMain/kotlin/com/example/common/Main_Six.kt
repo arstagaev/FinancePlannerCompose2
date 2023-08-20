@@ -126,16 +126,6 @@ fun updateXXX() {
         }
     }
 
-    // make forecast
-//    val lastMonthConsts = stateFall.last().filter { it.isConst }
-//    val incomeConst = lastMonthConsts.filter { it.amount > 0 }.map { it.amount }
-//    val expenseConst = lastMonthConsts.filter { it.amount < 0 }.map { it.amount }
-//
-//    val sumIncConst = incomeConst.sum()
-//    val sumExpConst = expenseConst.sum()
-//
-//    val delta = sumIncConst - sumExpConst
-
     val sum1 = resultArray.last().sum + deltaForFuture //lastSum + delta + resultArray.last().sum
     val sum2 = sum1 + deltaForFuture
     val sum3 = sum2 + deltaForFuture
@@ -163,8 +153,6 @@ fun updateXXX() {
     }
 
     var forecast = FutureSaldo(
-        //investmentsAmount = investments, investmentsName = startInvestmentsName,
-
         income = incConst, expense = expConst,
         startForecastDate =dt,
         sum1 = sum1,
@@ -177,9 +165,6 @@ fun updateXXX() {
     )
 
     GlobalScope.async {
-//        stateFall.forEachIndexed { index, ints ->
-//            stateFall[index].sortDescending()
-//        }
         resultFall.emit(arrayListOf())
         resultFall.emit(resultArray)
 
@@ -188,8 +173,6 @@ fun updateXXX() {
 
         //futureFall.emit(null)
         futureFall.value = forecast
-
-
 
         println("refresh-> ${stateFall.joinToString()}")
     }
