@@ -1,7 +1,10 @@
 package com.example.common
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.MarqueeAnimationMode
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -11,6 +14,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -23,9 +28,20 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.common.custom.DatePickerUI
+import com.example.common.custom.DateSelectionSection
+import com.example.common.custom.currentDay
+import com.example.common.custom.currentMonth
+import com.example.common.custom.currentYear
+import com.example.common.custom.defineNumMonth
+import com.example.common.custom.monthsNames
+import com.example.common.utils.toIntSafe
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -56,8 +72,8 @@ var stateFall = arrayListOf<ArrayList<SaldoCell>>(
 )
 var configurationOfSaldo = mutableStateOf<SaldoConfiguration>(
     SaldoConfiguration(
-        investmentsAmount = 1000,
-        investmentsName = "Test"
+        investmentsAmount = -404,
+        investmentsName = "404"
     )
 )
 
@@ -68,15 +84,20 @@ val futureFall = mutableStateOf<FutureSaldo?>(null)
 private var resultArray = arrayListOf<ResultSaldo>()
 
 var isEditMode = mutableStateOf(false)
-private val startDate = kotlinx.datetime.LocalDate(2023,1,1)//LocalDateTime.of(2023,1,1)
+var inputDateMode = mutableStateOf(false)
+
+private var year = 2023
+private var month = 1
+private var startDate = LocalDate(year,month,1)//LocalDateTime.of(2023,1,1)
+
 
 @Serializable
 data class SaveContainer(val data: ArrayList<ArrayList<SaldoCell>>)
 
 @Serializable
 data class SaldoConfiguration(
-    val investmentsAmount: Int,
-    val investmentsName: String,
+    var investmentsAmount: Int,
+    var investmentsName: String,
 )
 
 data class ResultSaldo(
@@ -99,16 +120,18 @@ data class FutureSaldo(
 data class SaldoCell(var amount: Int, var name: String = "", var isConst: Boolean = false)
 
 fun initital() {
-    decodeFromFile()
-    updateWhole()
+    CoroutineScope(CoroutineName("Init")).launch {
+        decodeFromFile()
+        updateWhole()
+    }
 }
 fun updateWhole() {
-
+    startDate = LocalDate(year = year, monthNumber = month,1)
     var investments = configurationOfSaldo.value.investmentsAmount
     resultArray.clear()
 
     // make result
-    var lastSum = investments
+    var lastSum = configurationOfSaldo.value.investmentsAmount//-1000//investments
 
     // for result
     var deltaForFuture = 0
@@ -126,6 +149,7 @@ fun updateWhole() {
         var expense = expList.sumOf { it.amount }
 
         lastSum += income + expense
+        println("<stateFall.forEachIndexed>>>> lastSum:${lastSum}  income:${income} expense:${expense}  investmentsAmount VM:${configurationOfSaldo.value.investmentsAmount}")
         dt = startDate.plus(DatePeriod(months = index))
         resultArray.add(ResultSaldo(date = dt, income = income, sum = lastSum, expense = expense))
 
@@ -181,8 +205,11 @@ fun updateWhole() {
 
         //futureFall.emit(null)
         futureFall.value = forecast
-
-        println("refresh-> ${stateFall.joinToString()}")
+        println("===========================>")
+        println("~refresh stateFall-> ${stateFall.joinToString()}")
+        println("~refresh resultArray-> ${resultArray.joinToString()}")
+        println("~refresh forecast-> ${forecast.toString()}")
+        println("<===========================")
     }
 }
 
@@ -264,169 +291,259 @@ private fun deleteCell(monthIndex: Int, saldoCell: SaldoCell, andFuture: Boolean
     updateWhole()
 }
 
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun AppX2() {
-
+    val crtcxt = rememberCoroutineScope()
     LaunchedEffect(true) {
         println("At start: ${stateFall.joinToString()}")
         updateWhole()
         //tester1()
     }
     val iem = remember { isEditMode }
+    val idm = remember { inputDateMode }
     val col = waterFall.collectAsState(
         stateFall
     )
 
+    Box(modifier = Modifier.fillMaxSize()) {
 
-    Column(
-        Modifier//.fillMaxSize().background(colorBackgroundDark)//.fillMaxWidth()
-    ) {
-        AnimatedVisibility(
-            iem.value
+        Column(
+            Modifier.fillMaxSize() , verticalArrangement = Arrangement.SpaceAround//.fillMaxSize().background(colorBackgroundDark)//.fillMaxWidth()
         ) {
-            Row(
-                Modifier.fillMaxWidth().height(50.dp).background(Color.Red).clickable {
-                    isEditMode.value = false
-                    //actionSave.value = true
-                    println("refresh-> ${stateFall.joinToString()}")
-                    updateWhole()
-                }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically
+            AnimatedVisibility(
+                idm.value
             ) {
-                encodeForSave()
-                Text("Recalculate", fontSize = 30.sp)
+                Column(
+                    Modifier.fillMaxWidth()//.height(50.dp)
+                        .background(Color.White).clickable {
+//                    isEditMode.value = false
+//                    updateWhole()
+                        }, verticalArrangement = Arrangement.SpaceEvenly, horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+//                crtcxt.launch {
+//                    encodeForSave()
+//                }
+                    val chosenYear = remember { mutableStateOf(currentYear) }
+                    val chosenMonth = remember { mutableStateOf(currentMonth) }
+
+                    Text(modifier = Modifier.width(300.dp), text = "Choose started date:", color = colorTextCreditTitle, fontSize = 30.sp)
+
+                    Spacer(modifier = Modifier.height(30.dp))
+
+                    DateSelectionSection(
+                        onYearChosen = {
+                            //chosenYear.value = it.toIntSafe()
+                            year = it.toIntSafe()
+                                       },
+                        onMonthChosen = {
+                            //chosenMonth.value = monthsNames.map { it.name }.indexOf(it)
+                            month = defineNumMonth(it)
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.fillMaxWidth().height(30.dp))
+
+                    Button(
+                        shape = RoundedCornerShape(5.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp),
+                        onClick = {
+                            updateWhole()
+                            inputDateMode.value = false
+                        }
+                    ) {
+                        Text(
+                            text = "Done",
+                            style = MaterialTheme.typography.button,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+//                    Box(Modifier.width(150.dp).fillMaxHeight().padding(5.dp)) {
+//                        Text("Save init date", color = colorTextCreditTitle, fontSize = 30.sp)
+//                    }
+
+
+                }
             }
-        }
-        LazyRow(Modifier.background(
-            Color.White
-            //colorBackgroundDark2
-        )) {
+            AnimatedVisibility(
+                iem.value
+            ) {
+                Row(
+                    Modifier.fillMaxWidth().height(50.dp).background(colorCredit).clickable {
+                        isEditMode.value = false
+                        //actionSave.value = true
+                        //println("refresh-> ${stateFall.joinToString()}")
+                        updateWhole()
+                    }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically
+                ) {
+                    crtcxt.launch {
+                        encodeForSave()
+                    }
+
+                    Text("Recalculate", color = colorTextCreditTitle, fontSize = 30.sp)
+                }
+            }
+            LazyRow(Modifier.fillMaxSize().background(
+                colorGrayWindow2
+                //Color.White
+                //colorBackgroundDark2
+            )) {
 //            itemsIndexed(col.value, itemContent = {parentIndex, parentItem ->
 //                monthZero(parentItem, parentIndex)
 //            })
-            item {
-                InitialInvestments()
-            }
-            col.value.forEachIndexed { parentIndex, parentItem ->
+
                 item {
-                    val res = resultFall.collectAsState(resultArray)
+                    InitialInvestments()
+                }
+                col.value.forEachIndexed { parentIndex, parentItem ->
+                    item {
+                        val res = resultFall.collectAsState(resultArray)
 
-                    Card(
-                        modifier = Modifier
-                            .width(150.dp)
-                            .padding(5.dp),
-                        //elevation = 10.dp
-                    ) {
-                        Box(Modifier.fillMaxSize().background(Color.LightGray).clickable {  }) {
-                            val dt = if (res.value.size > parentIndex) res.value[parentIndex].date else null
-                            Text("${dt?.year} ${dt?.month} ", modifier = Modifier.fillMaxSize().padding(top = (1).dp,start = 10.dp).align(Alignment.TopCenter),
-                                fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Light,
-                                color = Color.DarkGray
-                            )
-
-                            Column(
-                                modifier = Modifier.fillMaxSize().padding(top = 15.dp), horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
+                        Card(
+                            modifier = Modifier
+                                .width(150.dp)
+                                .padding(5.dp),
+                            shape = RoundedCornerShape(10.dp)
+                            //elevation = 10.dp
+                        ) {
+                            Box(Modifier.fillMaxSize().background(
+                                colorCard
+                                //Color.LightGray
+                            )) {
+                                val dt = if (res.value.size > parentIndex) res.value[parentIndex].date else null
+                                Text("${dt?.year} ${dt?.month} ", modifier = Modifier.fillMaxWidth().padding(top = (1).dp,start = 10.dp).align(Alignment.TopCenter)
+                                    .clickable {
+                                        inputDateMode.value = !inputDateMode.value
+                                    }
+                                    ,
+                                    fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Light,
+                                    color = fontTitleMonth//Color.DarkGray
+                                )
 
                                 Column(
-                                    Modifier.weight(3f).background(colorDebit))
-                                {
-                                    Spacer(Modifier.fillMaxWidth().height(3.dp))
-                                    LazyColumn {
-                                        itemsIndexed(
-                                            parentItem.filter { it.amount > 0 }.sortedByDescending { it.amount },
-                                            itemContent = { index, item ->
-                                                strokeAgregator(item, parentIndex, index)
-                                                //Text(">${item}")
-                                            }
-                                        )
-                                        // circle "plus" for add new stroke of Saldo
-                                        item {
-                                            plusik(isIncome = true, parentIndex = parentIndex)
-                                        }
-                                    }
-                                }
-
-                                // SUMMA:
-                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.SpaceBetween) {
-                                    Row(modifier = Modifier.fillMaxWidth().background(colorDebitResult)) {
-                                        Text("Σ Income: ${if (res.value.size > parentIndex) res.value[parentIndex].income else 0}", modifier = Modifier.padding(vertical = 2.dp),
-                                            fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
-                                            color = colorTextDebitTitle
-                                        )
-                                    }
-
-                                    Text("${ if (res.value.size > parentIndex) res.value[parentIndex].sum else 0}", modifier = Modifier.padding(vertical = 5.dp).clickable {
-                                        GlobalScope.async {
-                                            updateWhole()
-                                        }
-                                    },
-                                        fontFamily = FontFamily.Default, fontSize = 25.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
-                                        color = Color.DarkGray
-                                    )
-                                    Row(modifier = Modifier.fillMaxWidth().background(colorCreditResult)) {
-                                        Text(
-                                            "Σ Expense: ${if (res.value.size > parentIndex) res.value[parentIndex].expense else 0}",
-                                            modifier = Modifier.padding(vertical = 2.dp),
-                                            fontFamily = FontFamily.Default,
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            textAlign = TextAlign.Center,
-                                            color = colorTextCreditTitle
-                                        )
-                                    }
-                                }
-
-                                Column(
-                                    Modifier.weight(3f).background(colorCredit)
+                                    modifier = Modifier.fillMaxSize().padding(top = 15.dp), horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    Spacer(Modifier.fillMaxWidth().height(3.dp))
-                                    LazyColumn {
-                                        itemsIndexed(parentItem.filter { it.amount < 0 }.sortedByDescending { it.amount }, itemContent = { index, itemStroke ->
-                                            //Text(">${item}")
-                                            strokeAgregator(itemStroke, parentIndex, index, isIncome = false)
 
-                                        })
-                                        // circle "plus" for add new stroke of Saldo
-                                        item {
-                                            plusik(isIncome = false, parentIndex)
+                                    Column(
+                                        Modifier.weight(3f)
+                                        //.background(colorDebit)
+                                    )
+                                    {
+                                        Spacer(Modifier.fillMaxWidth().height(3.dp))
+                                        LazyColumn {
+                                            itemsIndexed(
+                                                parentItem.filter { it.amount > 0 }.sortedByDescending { it.amount },
+                                                itemContent = { index, item ->
+                                                    strokeAgregator(item, parentIndex, index)
+                                                    //Text(">${item}")
+                                                }
+                                            )
+                                            // circle "plus" for add new stroke of Saldo
+                                            item {
+                                                plusik(isIncome = true, parentIndex = parentIndex)
+                                            }
                                         }
                                     }
 
+                                    // SUMMA:
+                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
+                                        Row(modifier = Modifier.fillMaxWidth().background(colorDebitResult)) {
+                                            Text("Σ Income: ${if (res.value.size > parentIndex) res.value[parentIndex].income else 0}", modifier = Modifier.padding(vertical = 2.dp),
+                                                fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
+                                                color = colorTextDebitTitle
+                                            )
+                                        }
+
+                                        Text("${ if (res.value.size > parentIndex) res.value[parentIndex].sum else 0}", modifier = Modifier.basicMarquee(iterations = 10).padding(vertical = 5.dp).clickable {
+                                            GlobalScope.async {
+                                                updateWhole()
+                                            }
+                                        },
+                                            fontFamily = FontFamily.Default, fontSize = 25.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
+                                            overflow = TextOverflow.Ellipsis,
+                                            color = colorTextSumMonth //Color.DarkGray
+                                        )
+                                        Row(modifier = Modifier.fillMaxWidth().background(colorCreditResult)) {
+                                            Text(
+                                                "Σ Expense: ${if (res.value.size > parentIndex) res.value[parentIndex].expense else 0}",
+                                                modifier = Modifier.padding(vertical = 2.dp),
+                                                fontFamily = FontFamily.Default,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                textAlign = TextAlign.Center,
+                                                color = colorTextCreditTitle
+                                            )
+                                        }
+                                    }
+
+                                    Column(
+                                        Modifier.weight(3f)
+                                        //.background(colorCredit)
+                                    ) {
+                                        Spacer(Modifier.fillMaxWidth().height(3.dp))
+                                        LazyColumn {
+                                            itemsIndexed(parentItem.filter { it.amount < 0 }.sortedByDescending { it.amount }, itemContent = { index, itemStroke ->
+                                                //Text(">${item}")
+                                                strokeAgregator(itemStroke, parentIndex, index, isIncome = false)
+
+                                            })
+                                            // circle "plus" for add new stroke of Saldo
+                                            item {
+                                                plusik(isIncome = false, parentIndex)
+                                            }
+                                        }
+
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-            item {
-                Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Center) {
-                    Box(modifier = Modifier.clickable {
-                        addNewSaldo()
-                    }
-                        //.padding(4.dp)
-                        .size(30.dp)
-                        .aspectRatio(1f)
-                        .background(Color.White, shape = CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(modifier = Modifier, text = "+", color= Color.Black,   textAlign = TextAlign.Center)
+                item {
+                    Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+                        Box(modifier = Modifier.clickable {
+                            addNewSaldo()
+                        }
+                            //.padding(4.dp)
+                            .size(30.dp)
+                            .aspectRatio(1f)
+                            .background(Color.White, shape = CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(modifier = Modifier, text = "+", color= Color.Black,   textAlign = TextAlign.Center)
+                        }
                     }
                 }
+                item {
+                    forecastGhostMonth(1)
+                }
+                item {
+                    forecastGhostMonth(2)
+                }
+                item {
+                    forecastGhostMonth(3)
+                }
+                item {
+                    longForecast()
+                }
             }
-            item {
-                forecastGhostMonth(1)
-            }
-            item {
-                forecastGhostMonth(2)
-            }
-            item {
-                forecastGhostMonth(3)
-            }
-            item {
-                longForecast()
+
+        }
+
+        Card(modifier = Modifier.size(60.dp).padding(10.dp).align(Alignment.BottomStart), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
+            Box(modifier = Modifier.fillMaxSize().clickable {
+                inputDateMode.value = !inputDateMode.value
+            }) {
+                Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.Settings, contentDescription = "Settings")
+
             }
         }
     }
+
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -449,7 +566,7 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
             }
         }
     }
-    Card (Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 2.dp, start = 3.dp, end = 3.dp),
+    Card (Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 2.dp, start = 5.dp, end = 5.dp),
         shape = RoundedCornerShape(5.dp),
         elevation = 10.dp) {
 
@@ -490,13 +607,16 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     Row(Modifier.clickable {
                         deleteCell(monthIndex = parentIndex, saldoCell = saldoCell)
-                        isEdit.value = false
+                        isEditMode.value = false
+                        //isEdit.value = false
+
                     }) {
                         Text("❌", fontSize = 20.sp)
                     }
                     Row(Modifier.clickable {
                         deleteCell(monthIndex = parentIndex, saldoCell = saldoCell, true)
-                        isEdit.value = false
+                        //isEdit.value = false
+                        isEditMode.value = false
                     }) {
                         Text("❌\uD83D\uDD1C", fontSize = 20.sp)
                     }

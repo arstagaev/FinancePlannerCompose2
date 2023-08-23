@@ -1,6 +1,8 @@
 package com.example.common
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,6 +27,7 @@ import kotlinx.coroutines.async
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun forecastGhostMonth(
     index: Int
@@ -80,7 +83,7 @@ fun forecastGhostMonth(
                         2 -> futureSaldo.value?.sum2
                         3 -> futureSaldo.value?.sum3
                         else -> futureSaldo.value?.sum3
-                    }}", modifier = Modifier.padding(vertical = 5.dp).clickable {
+                    }}", modifier = Modifier.basicMarquee(iterations = 10).padding(vertical = 5.dp).clickable {
                         GlobalScope.async {
                             updateWhole()
                         }

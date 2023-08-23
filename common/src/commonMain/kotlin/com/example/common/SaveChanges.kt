@@ -8,6 +8,9 @@ val Dir1 = File("${JFileChooser().fileSystemView.defaultDirectory}/$MAINFOLDER")
 val theFileArray = File(
     Dir1,"data.json"
 )
+val theFileConfig = File(
+    Dir1,"config.json"
+)
 fun createDemoConfigFile() : File {
     println("createDemoConfigFile ${Dir1.absoluteFile}")
 
@@ -33,6 +36,6 @@ fun writeToFile(msg: String, fl: File) {
     }
 }
 
-expect fun encodeForSave()
+expect suspend fun encodeForSave()
 
-expect fun decodeFromFile()
+expect suspend fun decodeFromFile()

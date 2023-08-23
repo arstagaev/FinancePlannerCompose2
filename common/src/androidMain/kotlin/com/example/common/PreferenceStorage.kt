@@ -36,6 +36,12 @@ object PreferenceStorage {
             it.putString("saveContainer", value)
         }
 
+    var saveConfig: String
+        get() = preferences.getString("saveConfig","").toString()
+        set(value) = preferences.edit {
+            it.putString("saveConfig", value)
+        }
+
 //    var baseCurrency: String
 //        get() = preferences.getString("baseCurrency","USD").toString()
 //        set(value) = preferences.edit {

@@ -1,5 +1,6 @@
 package ui
 
+import androidx.compose.material.MaterialTheme
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.example.common.AppX2
@@ -18,6 +19,8 @@ fun main() = application {
         //Tester()
         //TesterThree()
         initital()
+
+        //MaterialTheme(colors = darkFinColors)
         AppX2()
     }
 }

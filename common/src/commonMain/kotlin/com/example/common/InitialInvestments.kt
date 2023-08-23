@@ -1,6 +1,8 @@
 package com.example.common
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Card
@@ -23,28 +25,35 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun InitialInvestments() {
-    var configSaldos = remember { configurationOfSaldo }
+    //var configSaldos = remember { configurationOfSaldo }
     var isEditLocal = remember { mutableStateOf(false) }
 
-    var saldoStrokeName = remember { mutableStateOf("${configSaldos.value.investmentsName}") }
-    var saldoStrokeAmount = remember { mutableStateOf("${configSaldos.value.investmentsAmount}") }
+    var saldoStrokeName = remember { mutableStateOf("${configurationOfSaldo.value.investmentsName}") }
+    var saldoStrokeAmount = remember { mutableStateOf("${configurationOfSaldo.value.investmentsAmount}") }
 
 
-    LaunchedEffect(isEditMode.value) {
+    LaunchedEffect(isEditMode.value, configurationOfSaldo.value) {
+        println("TRIGGERED ${configurationOfSaldo.value.investmentsAmount}")
+
+
         if (!isEditMode.value) {
             if (isEditLocal.value) {
+                //configurationOfSaldo.value = SaldoConfiguration(investmentsName = saldoStrokeName.value, investmentsAmount = saldoStrokeAmount.value.toInt())
+                configurationOfSaldo.value = configurationOfSaldo.value.copy(investmentsName = saldoStrokeName.value, investmentsAmount = saldoStrokeAmount.value.toInt())
                 updateWhole()
-                configurationOfSaldo.value = SaldoConfiguration(investmentsName = saldoStrokeName.value, investmentsAmount = saldoStrokeAmount.value.toInt())
                 isEditLocal.value = false
             }
         }
+        saldoStrokeName.value = configurationOfSaldo.value.investmentsName.toString()
+        saldoStrokeAmount.value = configurationOfSaldo.value.investmentsAmount.toString()
     }
 
     //var futureSaldo = remember { futureFall }
     val textInvest = buildAnnotatedString {
-        withStyle(SpanStyle(color = Color.Blue)) {
+        withStyle(SpanStyle(color = Color.DarkGray)) {
             append("${saldoStrokeName.value}")
         }
         withStyle(SpanStyle(
@@ -73,9 +82,9 @@ fun InitialInvestments() {
                             .background(Color.White),
                         value = saldoStrokeAmount.value.toString(),
                         onValueChange = {
-                            val newNum = it.filter { it.isDigit() }
-                            if (newNum.isNotEmpty()) {
-                                saldoStrokeAmount.value = newNum
+                            //val newNum = it.filter { it.isDigit() }
+                            if (it.isNotEmpty()) {
+                                saldoStrokeAmount.value = it.replace("[^0-9\\-]".toRegex(), "")
                             }
                             //println("->>${currentBudgetX.value.joinToString()}")
                             //println("stroke ${saldoStrokeAmount.value} ${CalcModule2.currentBudgetX.value.joinToString()}")
@@ -97,21 +106,16 @@ fun InitialInvestments() {
                         label = { Text("Enter name for source of amount", fontSize = 10.sp) },
                         textStyle = TextStyle.Default.copy(fontSize = 10.sp),
                     )
-
                 } else {
                     Text(
                         textInvest,
-                        modifier = Modifier.padding(4.dp)//.align(Alignment.Center)
+                        modifier = Modifier.basicMarquee(iterations = 10).padding(4.dp)//.align(Alignment.Center)
                             ,
                         fontSize = 10.sp, fontFamily = FontFamily.Monospace,
                         textAlign = TextAlign.Center
                     )
                 }
             }
-
-
-
         }
     }
-
 }
