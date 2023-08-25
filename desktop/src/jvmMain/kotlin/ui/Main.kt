@@ -1,18 +1,24 @@
 package ui
 
-import androidx.compose.material.MaterialTheme
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import com.example.common.AppX2
-import com.example.common.initital
-import com.example.common.updateWhole
-
-
+import com.example.common.ui.mainscreen.AppX2
+import com.example.common.encodeForSave
+import com.example.common.ui.mainscreen.initital
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 
 fun main() = application {
 
-    Window(onCloseRequest = ::exitApplication) {
+    Window(onCloseRequest = {
+        CoroutineScope(CoroutineName("maim_app")).launch {
+            encodeForSave()
+            exitApplication()
+        }
+
+    }) {
 
         //App()
         //Test()

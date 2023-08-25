@@ -1,18 +1,16 @@
 package com.example.android
 
-import com.example.common.App
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.MaterialTheme
-import com.example.common.AppX2
+import com.example.common.ui.mainscreen.AppX2
 import com.example.common.encodeForSave
-import com.example.common.initital
+import com.example.common.ui.mainscreen.initital
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlin.coroutines.Continuation
 
 class MainActivity : AppCompatActivity() {
     var crt = CoroutineScope(CoroutineName("Activity"))

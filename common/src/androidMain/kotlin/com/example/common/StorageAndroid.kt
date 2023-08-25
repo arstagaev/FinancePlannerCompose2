@@ -1,10 +1,11 @@
 package com.example.common
 
+import com.example.common.ui.mainscreen.SaldoConfiguration
+import com.example.common.ui.mainscreen.SaveContainer
+import com.example.common.ui.mainscreen.configurationOfSaldo
+import com.example.common.ui.mainscreen.stateFall
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.io.BufferedReader
-import java.io.FileReader
-import java.io.IOException
 
 actual suspend fun encodeForSave() {
     val json = Json.encodeToString<SaveContainer>(SaveContainer(stateFall))

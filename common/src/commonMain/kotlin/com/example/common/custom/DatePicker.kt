@@ -183,7 +183,9 @@ val monthsNames = listOf(
 data class Month(val name: String, val number: Int)
 
 fun defineNumMonth(name: String): Int {
+
     monthsNames.forEachIndexed { index, month ->
+        println("${name}  ${month.name}  ${month.number}")
         if (name == month.name) {
             return month.number
         }

@@ -1,5 +1,9 @@
 package com.example.common
 
+import com.example.common.ui.mainscreen.SaldoConfiguration
+import com.example.common.ui.mainscreen.SaveContainer
+import com.example.common.ui.mainscreen.configurationOfSaldo
+import com.example.common.ui.mainscreen.stateFall
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.BufferedReader
@@ -42,20 +46,25 @@ actual suspend fun decodeFromFile() {
     } catch (e: IOException) {
         println("ERROR ${e.message}")
     }
-    println("<>> ${jsonConfig}")
+    //println("<>> ${jsonConfig}")
 
     if (jsonConfig.isNotEmpty()) {
         val decodedConfig = Json.decodeFromString<SaldoConfiguration>(jsonConfig)
-        configurationOfSaldo.value =  configurationOfSaldo.value.copy(investmentsAmount = decodedConfig.investmentsAmount, investmentsName = decodedConfig.investmentsName)
+        configurationOfSaldo.value =  configurationOfSaldo.value.copy(
+            investmentsAmount = decodedConfig.investmentsAmount,
+            investmentsName = decodedConfig.investmentsName,
+            startedDateMonth = decodedConfig.startedDateMonth,
+            startedDateYear = decodedConfig.startedDateYear
+        )
 
     }else {
-        encodeForSave()
+        //encodeForSave()
     }
 
     if (json.isNotEmpty()) {
         stateFall = Json.decodeFromString<SaveContainer>(json).data
     } else {
-        encodeForSave()
+       //encodeForSave()
     }
-    println("Encode successfully")
+    println("Encode successfully config: ${jsonConfig}  stateFall:${stateFall.size}")
 }
