@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import com.example.common.colorText
 import com.example.common.colorTextSecondary
 import com.example.common.models.SaldoCell
+import com.example.common.utils.currency
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.awt.event.KeyEvent
@@ -86,7 +87,7 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                 TextField(
                     modifier = Modifier.fillMaxWidth()//.height(40.dp)
                         .background(Color.Transparent).onKeyEvent {
-                            if (it.key == Key.Enter){
+                            if (it.key == Key.Enter) {
                                 actionToSaveChanges()
                                 true
                             }
@@ -95,14 +96,14 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                     //value = newCellSaldo.value.amount.toString(),
                     value = saldoStrokeAmount.value,
                     colors = if (isIncome) colorFieldsDebit else colorFieldsCredit,
-                    onValueChange = {
-                        val newNum = it.filter { it.isDigit() }
+                    onValueChange = { newStroke ->
+                        val newNum = newStroke.filter { it.isDigit() || it == '-' }
                         if (newNum.isNotEmpty()) {
                             saldoStrokeAmount.value = newNum
                         }
                     },
-                    label = { Text("Amount", color = colorTextDebitTitle, fontSize = 8.sp) },
-                    textStyle = TextStyle.Default.copy(fontSize = 20.sp, color = colorTextDebitTitle, fontWeight = FontWeight.Bold),
+                    label = { Text("Amount", color = if (isIncome) colorTextDebitTitle else colorTextCreditTitle, fontSize = 8.sp) },
+                    textStyle = TextStyle.Default.copy(fontSize = 20.sp, color = if (isIncome) colorTextDebitTitle else colorTextCreditTitle, fontWeight = FontWeight.Bold),
                     keyboardActions = KeyboardActions(
                         onDone = { actionToSaveChanges() },
                         onSearch = { actionToSaveChanges() },
@@ -129,8 +130,8 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                             //isEditByHuman.value = true
                         }
                     },
-                    label = { Text("Name", color = colorTextDebitTitle, fontSize = 8.sp) },
-                    textStyle = TextStyle.Default.copy(fontSize = 20.sp, color = colorTextDebitTitle),
+                    label = { Text("Name", color = if (isIncome) colorTextDebitTitle else colorTextCreditTitle, fontSize = 8.sp) },
+                    textStyle = TextStyle.Default.copy(fontSize = 20.sp, color = if (isIncome) colorTextDebitTitle else colorTextCreditTitle),
                     keyboardActions = KeyboardActions(
                         onDone = { actionToSaveChanges() },
                         onSearch = { actionToSaveChanges() },
@@ -139,21 +140,7 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                         onSend = {actionToSaveChanges()}
                     )
                 )
-//                TextField(
-//                    modifier = Modifier.fillMaxWidth()//.height(40.dp)
-//                        .background(Color.Transparent),
-//                    value = saldoStrokeName.value?:"",
-//
-//                    onValueChange = {
-//                        if (it.isNotEmpty()) {
-//                            saldoStrokeName.value = it
-//                            //newCellSaldo.value.name = it
-//                            //isEditByHuman.value = true
-//                        }
-//                    },
-//                    label = { Text("Name", fontSize = 10.sp) },
-//                    textStyle = TextStyle.Default.copy(fontSize = 10.sp),
-//                )
+
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     Row(Modifier.clickable {
                         deleteCell(monthIndex = parentIndex, saldoCell = saldoCell)
@@ -175,7 +162,7 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
             } else {
                 val text1 = buildAnnotatedString {
                     withStyle(SpanStyle(color = if (isIncome) colorDebitResult else colorCreditResult, fontWeight = FontWeight.Bold)) {
-                        append("${saldoCell.amount}")
+                        append("${saldoCell.amount}".currency())
                     }
                     withStyle(SpanStyle(color = Color.LightGray)) {
                         append("\n" + "${saldoCell.name}")

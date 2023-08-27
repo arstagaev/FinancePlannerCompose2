@@ -349,7 +349,7 @@ fun MainDashboard() {
 
 
                 item {
-                    Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+                    Column(Modifier.fillMaxHeight().padding(top = 15.dp), verticalArrangement = Arrangement.Top) {
                         Box(modifier = Modifier.clickable {
                             addNewSaldo()
                         }
@@ -385,6 +385,7 @@ fun MainDashboard() {
                 if (saldoMode.value == SaldoMode.SHOW) {
                     saldoMode.value = SaldoMode.SETUP_SETTINGS
                 } else {
+                    updateWhole()
                     saldoMode.value = SaldoMode.SHOW
                 }
                 //inputDateMode.value = !inputDateMode.value

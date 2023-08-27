@@ -6,16 +6,22 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -30,8 +36,9 @@ import com.example.common.colorCard
 import com.example.common.colorTextSecondary
 import com.example.common.colorTextSumMonth
 import com.example.common.enums.SaldoMode
+import com.example.common.utils.currency
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun InitialInvestments() {
     //var configSaldos = remember { configurationOfSaldo }
@@ -83,31 +90,72 @@ fun InitialInvestments() {
                 Box(Modifier.fillMaxSize().shimmerEffect())
                 return@Card
             }
+            val colorFieldsInitial = TextFieldDefaults.textFieldColors(
+                backgroundColor = Color.Transparent, textColor = colorTextSumMonth,
+                focusedLabelColor = Color.White, unfocusedLabelColor = colorTextSecondary,
+                placeholderColor = colorTextSumMonth,
+                unfocusedIndicatorColor = colorTextSumMonth, focusedIndicatorColor = Color.White
+            )
             Column(Modifier.fillMaxWidth()
                 .background(colorCard).clickable {
                     isEditLocal.value = true
                     isEditMode.value = true
                 }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                 if (isEditLocal.value) {
+//                    TextField(
+//                        modifier = Modifier.fillMaxWidth()//.height(40.dp)
+//                            .background(Color.White),
+//                        value = saldoStrokeAmount.value.toString(),
+//                        onValueChange = {
+//                            //val newNum = it.filter { it.isDigit() }
+//                            if (it.isNotEmpty()) {
+//                                saldoStrokeAmount.value = it.replace("[^0-9\\-]".toRegex(), "")
+//                            }
+//                            //println("->>${currentBudgetX.value.joinToString()}")
+//                            //println("stroke ${saldoStrokeAmount.value} ${CalcModule2.currentBudgetX.value.joinToString()}")
+//                        },
+//                        textStyle = TextStyle.Default.copy(fontSize = 15.sp)
+//                    )
                     TextField(
                         modifier = Modifier.fillMaxWidth()//.height(40.dp)
-                            .background(Color.White),
-                        value = saldoStrokeAmount.value.toString(),
-                        onValueChange = {
-                            //val newNum = it.filter { it.isDigit() }
-                            if (it.isNotEmpty()) {
-                                saldoStrokeAmount.value = it.replace("[^0-9\\-]".toRegex(), "")
+                            .background(Color.Transparent).onKeyEvent {
+                                if (it.key == Key.Enter) {
+                                    actionToSaveChanges()
+                                    true
+                                }
+                                false
+                            },
+                        //value = newCellSaldo.value.amount.toString(),
+                        value = saldoStrokeAmount.value,
+                        colors = colorFieldsInitial,
+                        onValueChange = { newStroke ->
+                            val newNum = newStroke.filter { it.isDigit() || it == '-' }
+                            if (newNum.isNotEmpty()) {
+                                saldoStrokeAmount.value = newNum
                             }
-                            //println("->>${currentBudgetX.value.joinToString()}")
-                            //println("stroke ${saldoStrokeAmount.value} ${CalcModule2.currentBudgetX.value.joinToString()}")
                         },
-                        textStyle = TextStyle.Default.copy(fontSize = 15.sp)
+                        label = { Text("Amount", color = colorTextSumMonth, fontSize = 8.sp) },
+                        textStyle = TextStyle.Default.copy(fontSize = 20.sp, color = colorTextSumMonth, fontWeight = FontWeight.Bold),
+                        keyboardActions = KeyboardActions(
+                            onDone = { actionToSaveChanges() },
+                            onSearch = { actionToSaveChanges() },
+                            onGo = {actionToSaveChanges()},
+                            onNext = {actionToSaveChanges()},
+                            onSend = {actionToSaveChanges()}
+                        )
                     )
+
                     TextField(
                         modifier = Modifier.fillMaxWidth()//.height(40.dp)
-                            .background(Color.Transparent),
-                        value = saldoStrokeName.value?:"",
-
+                            .background(Color.Transparent).onKeyEvent {
+                                if (it.key == Key.Enter){
+                                    actionToSaveChanges()
+                                    true
+                                }
+                                false
+                            },
+                        value = saldoStrokeName.value ?: "",
+                        colors = colorFieldsInitial,
                         onValueChange = {
                             if (it.isNotEmpty()) {
                                 saldoStrokeName.value = it
@@ -115,11 +163,33 @@ fun InitialInvestments() {
                                 //isEditByHuman.value = true
                             }
                         },
-                        label = { Text("Enter name for source of amount", fontSize = 10.sp) },
-                        textStyle = TextStyle.Default.copy(fontSize = 10.sp),
+                        label = { Text("Name", color = colorTextSumMonth, fontSize = 8.sp) },
+                        textStyle = TextStyle.Default.copy(fontSize = 20.sp, color = colorTextSumMonth),
+                        keyboardActions = KeyboardActions(
+                            onDone = { actionToSaveChanges() },
+                            onSearch = { actionToSaveChanges() },
+                            onGo = {actionToSaveChanges()},
+                            onNext = {actionToSaveChanges()},
+                            onSend = {actionToSaveChanges()}
+                        )
                     )
+//                    TextField(
+//                        modifier = Modifier.fillMaxWidth()//.height(40.dp)
+//                            .background(Color.Transparent),
+//                        value = saldoStrokeName.value?:"",
+//
+//                        onValueChange = {
+//                            if (it.isNotEmpty()) {
+//                                saldoStrokeName.value = it
+//                                //newCellSaldo.value.name = it
+//                                //isEditByHuman.value = true
+//                            }
+//                        },
+//                        label = { Text("Name", fontSize = 10.sp) },
+//                        textStyle = TextStyle.Default.copy(fontSize = 10.sp),
+//                    )
                 } else {
-                    Text("${saldoStrokeAmount.value}", modifier = Modifier.basicMarquee(iterations = 10).padding(vertical = 5.dp)
+                    Text("${saldoStrokeAmount.value}".currency(), modifier = Modifier.basicMarquee(iterations = 10).padding(vertical = 5.dp)
                         //.clickable {}
                         ,
                         fontFamily = FontFamily.Default, fontSize = 25.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,

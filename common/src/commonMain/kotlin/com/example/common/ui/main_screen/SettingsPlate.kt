@@ -95,6 +95,7 @@ fun EditorOfDate() {
                             items.forEachIndexed { index, s ->
                                 DropdownMenuItem(onClick = {
                                     selectedIndex = index
+                                    configurationOfSaldo.value = configurationOfSaldo.value.copy(currentCurrency = s)
                                     expanded = false
                                 }) {
                                     Text(text = s, color = colorTextSecondary, fontSize = 20.sp)

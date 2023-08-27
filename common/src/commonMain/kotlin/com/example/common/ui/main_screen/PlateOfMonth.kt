@@ -103,7 +103,7 @@ fun PlateOfMonth(parentIndex: Int, parentItem: ArrayList<SaldoCell>) {
                     Row(modifier = Modifier.fillMaxWidth().background(
                         colorDebitResult
                     )) {
-                        Text("Σ Income: ${if (res.value.size > parentIndex) res.value[parentIndex].income else 0}", modifier = Modifier.padding(vertical = 2.dp),
+                        Text("Σ Income:"+"${if (res.value.size > parentIndex) res.value[parentIndex].income else 0}", modifier = Modifier.padding(vertical = 2.dp),
                             fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
                             color = colorTextDebitTitle
                         )
