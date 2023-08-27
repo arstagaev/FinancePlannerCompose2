@@ -1,10 +1,11 @@
-package com.example.common
+package com.example.common.ui.main_screen
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
@@ -21,12 +22,14 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.common.ui.mainscreen.configurationOfSaldo
-import com.example.common.ui.mainscreen.isEditMode
-import com.example.common.ui.mainscreen.updateWhole
+import com.example.common.colorCard
+import com.example.common.colorTextSecondary
+import com.example.common.colorTextSumMonth
+import com.example.common.enums.SaldoMode
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -37,6 +40,7 @@ fun InitialInvestments() {
     var saldoStrokeName = remember { mutableStateOf("${configurationOfSaldo.value.investmentsName}") }
     var saldoStrokeAmount = remember { mutableStateOf("${configurationOfSaldo.value.investmentsAmount}") }
 
+    var saldoModeInternal = remember { saldoMode }
 
     LaunchedEffect(isEditMode.value, configurationOfSaldo.value) {
         println("TRIGGERED ${configurationOfSaldo.value.investmentsAmount}")
@@ -54,7 +58,6 @@ fun InitialInvestments() {
         saldoStrokeAmount.value = configurationOfSaldo.value.investmentsAmount.toString()
     }
 
-    //var futureSaldo = remember { futureFall }
     val textInvest = buildAnnotatedString {
         withStyle(SpanStyle(color = Color.DarkGray)) {
             append("${saldoStrokeName.value}")
@@ -72,10 +75,16 @@ fun InitialInvestments() {
                 .width(150.dp)
                 //.height(100.dp)
                 .padding(5.dp),
-            elevation = 10.dp
+            elevation = 10.dp,
+            shape = RoundedCornerShape(20.dp)
         ) {
+            if (saldoModeInternal.value == SaldoMode.SETUP_SETTINGS || saldoModeInternal.value == SaldoMode.LOADING) {
+
+                Box(Modifier.fillMaxSize().shimmerEffect())
+                return@Card
+            }
             Column(Modifier.fillMaxWidth()
-                .background(Color.LightGray).clickable {
+                .background(colorCard).clickable {
                     isEditLocal.value = true
                     isEditMode.value = true
                 }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
@@ -110,10 +119,25 @@ fun InitialInvestments() {
                         textStyle = TextStyle.Default.copy(fontSize = 10.sp),
                     )
                 } else {
+                    Text("${saldoStrokeAmount.value}", modifier = Modifier.basicMarquee(iterations = 10).padding(vertical = 5.dp)
+                        //.clickable {}
+                        ,
+                        fontFamily = FontFamily.Default, fontSize = 25.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
+                        overflow = TextOverflow.Ellipsis,
+                        color = colorTextSumMonth //Color.DarkGray
+                    )
+//                    Text(
+//                        "${saldoStrokeAmount.value}",
+//                        modifier = Modifier.basicMarquee(iterations = 10).padding(4.dp)//.align(Alignment.Center)
+//                            ,color = colorText,
+//                        fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+//                        textAlign = TextAlign.Center
+//                    )
+
                     Text(
-                        textInvest,
+                        "${saldoStrokeName.value}",
                         modifier = Modifier.basicMarquee(iterations = 10).padding(4.dp)//.align(Alignment.Center)
-                            ,
+                        ,color = colorTextSecondary,
                         fontSize = 10.sp, fontFamily = FontFamily.Monospace,
                         textAlign = TextAlign.Center
                     )

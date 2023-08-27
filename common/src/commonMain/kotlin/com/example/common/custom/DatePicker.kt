@@ -31,64 +31,6 @@ import com.example.common.utils.toIntSafe
 import java.util.Calendar
 
 @Composable
-fun DatePickerUI(
-    label: String,
-    onDismissRequest: () -> Unit
-) {
-    Card(
-        shape = RoundedCornerShape(10.dp),
-        elevation = 10.dp,
-        backgroundColor = Color.White,
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .width(200.dp)
-                .padding(vertical = 10.dp, horizontal = 5.dp)
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.h1,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(30.dp))
-
-            val chosenYear = remember { mutableStateOf(currentYear) }
-            val chosenMonth = remember { mutableStateOf(currentMonth) }
-            val chosenDay = remember { mutableStateOf(currentDay) }
-
-            DateSelectionSection(
-                onYearChosen = { chosenYear.value = it.toIntSafe() },
-                onMonthChosen = { chosenMonth.value = monthsNames.map { it.name }.indexOf(it) }
-            )
-
-            Spacer(modifier = Modifier.height(30.dp))
-
-           // val context = LocalContext.current
-            Button(
-                shape = RoundedCornerShape(5.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp),
-                onClick = {
-                    //Toast.makeText(context, "${chosenDay.value}-${chosenMonth.value}-${chosenYear.value}", Toast.LENGTH_SHORT).show()
-                    onDismissRequest()
-                }
-            ) {
-                Text(
-                    text = "Done",
-                    style = MaterialTheme.typography.button,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-    }
-}
-
-@Composable
 fun DateSelectionSection(
     onYearChosen: (String) -> Unit,
     onMonthChosen: (String) -> Unit
@@ -97,7 +39,7 @@ fun DateSelectionSection(
         horizontalArrangement = Arrangement.SpaceAround,
         modifier = Modifier
             .width(300.dp)
-            .height(120.dp)
+            .height(80.dp)
     ) {
 
         InfiniteItemsPicker(

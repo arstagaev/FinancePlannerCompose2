@@ -1,4 +1,4 @@
-package com.example.common.ui.mainscreen
+package com.example.common.ui.main_screen
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -19,13 +19,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.common.InitialInvestments
 import com.example.common.colorGrayWindow2
 import com.example.common.colorText
 import com.example.common.decodeFromFile
 import com.example.common.encodeForSave
-import com.example.common.forecastGhostMonth
-import com.example.common.longForecast
+import com.example.common.enums.SaldoMode
+import com.example.common.models.FutureSaldo
+import com.example.common.models.ResultSaldo
+import com.example.common.models.SaldoCell
+import com.example.common.models.SaldoConfiguration
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
@@ -35,8 +37,10 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.plus
-import kotlinx.serialization.Serializable
+import kotlinx.datetime.toKotlinLocalDateTime
+import java.time.LocalDateTime
 
 val colorDebit = Color(0xFF57DE5d)//Color(68,220,96)
 val colorCredit = Color(0xFFDE7171)//Color(220,63,96)
@@ -52,18 +56,18 @@ val colorTextCreditTitle = Color(144, 12, 63 )
 
 var configurationOfSaldo = mutableStateOf<SaldoConfiguration>(
     SaldoConfiguration(
-        investmentsAmount = -404,
-        investmentsName = "404",
-        startedDateMonth = 1,
+        investmentsAmount = 0,
+        investmentsName = "input here description",
+        startedDateMonth = 2,
         startedDateYear = 1997
     )
 )
 
-//private var year = 2023
-//private var month = 1
 private var startDate = LocalDate(
     configurationOfSaldo.value.startedDateYear,
-    configurationOfSaldo.value.startedDateMonth,1)//LocalDateTime.of(2023,1,1)
+    configurationOfSaldo.value.startedDateMonth,
+    1
+)//LocalDateTime.of(2023,1,1)
 
 var ShowWithDescription = true
 var stateFall = arrayListOf<ArrayList<SaldoCell>>(
@@ -80,41 +84,13 @@ val futureFall = mutableStateOf<FutureSaldo?>(null)
 internal var resultArray = arrayListOf<ResultSaldo>()
 
 var isEditMode = mutableStateOf(false)
-var inputDateMode = mutableStateOf(false)
+//var inputDateMode = mutableStateOf(false)
+var saldoMode = mutableStateOf<SaldoMode>(SaldoMode.LOADING)
 
 
-
-@Serializable
-data class SaveContainer(val data: ArrayList<ArrayList<SaldoCell>>)
-
-@Serializable
-data class SaldoConfiguration(
-    var investmentsAmount: Int,
-    var investmentsName: String,
-    var startedDateMonth: Int,
-    var startedDateYear: Int
-)
-
-data class ResultSaldo(
-    val date: LocalDate? = null, val income: Int, val sum: Int, val expense: Int//, var isForecast: Boolean = false//, val arrayIncome: ArrayList<Int>, val arrayExpense: ArrayList<Int>
-)
-
-data class FutureSaldo(
-    val income: Int,
-    var startForecastDate: LocalDate? = null,
-    val sum1: Int,
-    val sum2: Int,
-    val sum3: Int,
-    val expense: Int, var incomes: List<Int>, var expenses: List<Int>,
-    var periodHalfYear: Int? = null,
-    var periodFirstYear: Int? = null,
-    var periodSecondYear: Int? = null,
-)
-
-@Serializable
-data class SaldoCell(var amount: Int, var name: String = "", var isConst: Boolean = false)
 
 fun initital() {
+
     CoroutineScope(CoroutineName("Init")).launch {
         decodeFromFile()
         //delay(1000L)
@@ -122,6 +98,8 @@ fun initital() {
     }
 }
 fun updateWhole() {
+    val crtScp = CoroutineScope(CoroutineName("Update"))
+    //saldoMode.value = SaldoMode.LOADING
     resultArray.clear()
 
     // make result
@@ -141,6 +119,21 @@ fun updateWhole() {
     )
     //LocalDateTime.of(2023,1,1)
     println("> stateFall ${stateFall.joinToString()}")
+
+
+    // in initial launch of app , when empty
+    if (stateFall.isEmpty()) {
+        saldoMode.value = SaldoMode.SHOW
+        resultArray.add(
+            ResultSaldo(LocalDate(year = LocalDateTime.now().year,LocalDateTime.now().month,LocalDateTime.now().dayOfMonth),0,0,0)
+        )
+        configurationOfSaldo.value = configurationOfSaldo.value.copy(startedDateYear = LocalDateTime.now().year, startedDateMonth = LocalDateTime.now().monthValue)
+        crtScp.launch {
+            resultFall.emit(resultArray)
+        }
+        return
+    }
+
     stateFall.forEachIndexed { index, month ->
         var incList = ArrayList(month.filter { it != null && it.amount > 0  })
         var expList = ArrayList(month.filter { it != null && it.amount < 0  })
@@ -153,6 +146,7 @@ fun updateWhole() {
         dt = startDate.plus(DatePeriod(months = index))
         resultArray.add(ResultSaldo(date = dt, income = income, sum = lastSum, expense = expense))
 
+        // future generate
         if (index == stateFall.size-1) {
             futureIncome = incList.filter { it.isConst }.map { it.amount }
             futureExpense = expList.filter { it.isConst }.map { it.amount }
@@ -164,6 +158,7 @@ fun updateWhole() {
         }
     }
 
+    // future generate
     val sum1 = resultArray.last().sum + deltaForFuture //lastSum + delta + resultArray.last().sum
     val sum2 = sum1 + deltaForFuture
     val sum3 = sum2 + deltaForFuture
@@ -186,7 +181,7 @@ fun updateWhole() {
 
     var forecast = FutureSaldo(
         income = incConst, expense = expConst,
-        startForecastDate =dt,
+        startForecastDate = dt,
         sum1 = sum1,
         sum2 = sum2,
         sum3 = sum3,
@@ -196,7 +191,7 @@ fun updateWhole() {
         periodSecondYear = sumSecondYear
     )
 
-    CoroutineScope(CoroutineName("refresh main")).async {
+    crtScp.async {
         resultFall.emit(arrayListOf())
         resultFall.emit(resultArray)
 
@@ -210,7 +205,9 @@ fun updateWhole() {
         println("~refresh resultArray-> ${resultArray.joinToString()}")
         println("~refresh forecast-> ${forecast.toString()}")
         println("<===========================")
+        saldoMode.value = SaldoMode.SHOW
     }
+
 }
 
 internal fun updateStroke(oldSaldo: SaldoCell, newSaldoCell: SaldoCell, parentIndex: Int) {
@@ -229,6 +226,9 @@ internal fun updateStroke(oldSaldo: SaldoCell, newSaldoCell: SaldoCell, parentIn
 }
 
 private fun addNewSaldo() {
+    if (stateFall.isEmpty()) {
+        return
+    }
     var toFuture = stateFall.last().filter { it.isConst }
 
     stateFall.add(toFuture as ArrayList<SaldoCell>)
@@ -293,14 +293,14 @@ internal fun deleteCell(monthIndex: Int, saldoCell: SaldoCell, andFuture: Boolea
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
-fun AppX2() {
+fun MainDashboard() {
     val crtcxt = rememberCoroutineScope()
     LaunchedEffect(true) {
         delay(1000L)
         updateWhole()
     }
     val iem = remember { isEditMode }
-    val idm = remember { inputDateMode }
+    val idm = remember { saldoMode }
     val col = waterFall.collectAsState(
         stateFall
     )
@@ -311,7 +311,7 @@ fun AppX2() {
             Modifier.fillMaxSize() , verticalArrangement = Arrangement.SpaceAround//.fillMaxSize().background(colorBackgroundDark)//.fillMaxWidth()
         ) {
             AnimatedVisibility(
-                idm.value
+                idm.value == SaldoMode.SETUP_SETTINGS
             ) {
                 EditorOfDate()
             }
@@ -319,32 +319,35 @@ fun AppX2() {
                 iem.value
             ) {
                 Row(
-                    Modifier.fillMaxWidth().height(50.dp).background(colorCredit).clickable {
+                    Modifier.fillMaxWidth().shimmerEffectBlue().height(50.dp).clickable {
                         actionToSaveChanges()
                     }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically
                 ) {
 
-
-                    Text("Recalculate", color = colorTextCreditTitle, fontSize = 30.sp)
+                    Text("Save Changes", color = colorGrayWindow2, fontSize = 30.sp)
                 }
             }
             LazyRow(Modifier.fillMaxSize().background(
                 colorGrayWindow2
-                //Color.White
-                //colorBackgroundDark2
             )) {
-//            itemsIndexed(col.value, itemContent = {parentIndex, parentItem ->
-//                monthZero(parentItem, parentIndex)
-//            })
 
                 item {
                     InitialInvestments()
                 }
-                col.value.forEachIndexed { parentIndex, parentItem ->
+
+                if (col.value.isNotEmpty()) {
+                    col.value.forEachIndexed { parentIndex, parentItem ->
+                        item {
+                            PlateOfMonth(parentIndex, parentItem)
+                        }
+                    }
+                } else {
                     item {
-                        PlateOfMonth(parentIndex, parentItem)
+                        PlateOfMonth(0, arrayListOf<SaldoCell>())
                     }
                 }
+
+
                 item {
                     Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Center) {
                         Box(modifier = Modifier.clickable {
@@ -379,7 +382,12 @@ fun AppX2() {
 
         Card(modifier = Modifier.size(60.dp).padding(10.dp).align(Alignment.BottomStart), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
             Box(modifier = Modifier.fillMaxSize().clickable {
-                inputDateMode.value = !inputDateMode.value
+                if (saldoMode.value == SaldoMode.SHOW) {
+                    saldoMode.value = SaldoMode.SETUP_SETTINGS
+                } else {
+                    saldoMode.value = SaldoMode.SHOW
+                }
+                //inputDateMode.value = !inputDateMode.value
             }) {
                 Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.Settings, contentDescription = "Settings")
             }
@@ -388,7 +396,12 @@ fun AppX2() {
         Card(modifier = Modifier.width(250.dp)
             .height(65.dp).padding(10.dp).align(Alignment.BottomCenter), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
             Row(modifier = Modifier.fillMaxSize().background(Color.White).clickable {
-                inputDateMode.value = !inputDateMode.value
+                if (saldoMode.value == SaldoMode.SHOW) {
+                    saldoMode.value = SaldoMode.SETUP_SETTINGS
+                } else {
+                    saldoMode.value = SaldoMode.SHOW
+                }
+                //inputDateMode.value = !inputDateMode.value
             }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceAround) {
                 Text(modifier = Modifier.padding(4.dp), text = "Payback period:", color= Color.Black, textAlign = TextAlign.Center)
                 Text(modifier = Modifier.padding(4.dp), text = "3 Years", color= Color.Black, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,style = MaterialTheme.typography.body1)

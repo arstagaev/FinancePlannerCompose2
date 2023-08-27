@@ -1,4 +1,4 @@
-package com.example.common.ui.mainscreen
+package com.example.common.ui.main_screen
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -21,6 +21,7 @@ import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
@@ -31,7 +32,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.common.colorCard
 import com.example.common.colorTextSumMonth
+import com.example.common.enums.SaldoMode
 import com.example.common.fontTitleMonth
+import com.example.common.models.SaldoCell
+import com.example.common.utils.currency
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import java.util.ArrayList
@@ -40,7 +44,7 @@ import java.util.ArrayList
 @Composable
 fun PlateOfMonth(parentIndex: Int, parentItem: ArrayList<SaldoCell>) {
     val res = resultFall.collectAsState(resultArray)
-
+    var saldoModeInternal = remember { saldoMode }
     Card(
         modifier = Modifier
             .width(150.dp)
@@ -48,6 +52,11 @@ fun PlateOfMonth(parentIndex: Int, parentItem: ArrayList<SaldoCell>) {
         shape = RoundedCornerShape(10.dp)
         //elevation = 10.dp
     ) {
+        if (saldoModeInternal.value == SaldoMode.SETUP_SETTINGS || saldoModeInternal.value == SaldoMode.LOADING) {
+
+            Box(Modifier.fillMaxSize().shimmerEffect())
+            return@Card
+        }
         Box(
             Modifier.fillMaxSize().background(
             colorCard
@@ -56,9 +65,9 @@ fun PlateOfMonth(parentIndex: Int, parentItem: ArrayList<SaldoCell>) {
             val dt = if (res.value.size > parentIndex) res.value[parentIndex].date else null
             Text("${dt?.year} ${dt?.month} ", modifier = Modifier.fillMaxWidth().padding(top = (1).dp,start = 10.dp).align(
                 Alignment.TopCenter)
-                .clickable {
-                    inputDateMode.value = !inputDateMode.value
-                }
+//                .clickable {
+//                    inputDateMode.value = !inputDateMode.value
+//                }
                 ,
                 fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Light,
                 color = fontTitleMonth//Color.DarkGray
@@ -100,7 +109,7 @@ fun PlateOfMonth(parentIndex: Int, parentItem: ArrayList<SaldoCell>) {
                         )
                     }
 
-                    Text("${ if (res.value.size > parentIndex) res.value[parentIndex].sum else 0}", modifier = Modifier.basicMarquee(iterations = 10).padding(vertical = 5.dp).clickable {
+                    Text("${ if (res.value.size > parentIndex) res.value[parentIndex].sum else 0}".currency(), modifier = Modifier.basicMarquee(iterations = 10).padding(vertical = 5.dp).clickable {
                         GlobalScope.async {
                             updateWhole()
                         }

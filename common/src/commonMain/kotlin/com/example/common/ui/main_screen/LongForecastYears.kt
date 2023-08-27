@@ -1,4 +1,4 @@
-package com.example.common
+package com.example.common.ui.main_screen
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,7 +16,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.common.ui.mainscreen.futureFall
+import com.example.common.enums.SaldoMode
+import com.example.common.ui.main_screen.futureFall
 
 @Composable
 fun longForecast() {
@@ -39,8 +40,10 @@ fun longForecast() {
         }
         append("\n" + "${futureSaldo.value?.periodSecondYear}")
     }
+    var saldoModeInternal = remember { saldoMode }
 
     Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
+
         Card(
             modifier = Modifier
                 .width(150.dp)
@@ -48,6 +51,11 @@ fun longForecast() {
                 .padding(5.dp),
             elevation = 10.dp
         ) {
+            if (saldoModeInternal.value == SaldoMode.SETUP_SETTINGS || saldoModeInternal.value == SaldoMode.LOADING) {
+
+                Box(Modifier.fillMaxSize().shimmerEffect())
+                return@Card
+            }
             Box(Modifier.fillMaxSize()) {
                 Text(text1,
                     modifier = Modifier.padding(4.dp).align(Alignment.Center)
@@ -66,6 +74,11 @@ fun longForecast() {
                 .padding(5.dp),
             elevation = 10.dp
         ) {
+            if (saldoModeInternal.value == SaldoMode.SETUP_SETTINGS || saldoModeInternal.value == SaldoMode.LOADING) {
+
+                Box(Modifier.fillMaxSize().shimmerEffect())
+                return@Card
+            }
             Box(Modifier.fillMaxSize()) {
                 Text(text2,
                     modifier = Modifier.padding(4.dp).align(Alignment.Center)
@@ -83,6 +96,11 @@ fun longForecast() {
                 .padding(5.dp),
             elevation = 10.dp
         ) {
+            if (saldoModeInternal.value == SaldoMode.SETUP_SETTINGS || saldoModeInternal.value == SaldoMode.LOADING) {
+
+                Box(Modifier.fillMaxSize().shimmerEffect())
+                return@Card
+            }
             Box(Modifier.fillMaxSize()) {
                 Text(text3,
                     modifier = Modifier.padding(4.dp).align(Alignment.Center)

@@ -1,9 +1,9 @@
 package com.example.common
 
-import com.example.common.ui.mainscreen.SaldoConfiguration
-import com.example.common.ui.mainscreen.SaveContainer
-import com.example.common.ui.mainscreen.configurationOfSaldo
-import com.example.common.ui.mainscreen.stateFall
+import com.example.common.models.SaldoConfiguration
+import com.example.common.models.SaveContainer
+import com.example.common.ui.main_screen.configurationOfSaldo
+import com.example.common.ui.main_screen.stateFall
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 

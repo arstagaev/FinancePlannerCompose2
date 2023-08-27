@@ -1,4 +1,4 @@
-package com.example.common.ui.mainscreen
+package com.example.common.ui.main_screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.Checkbox
 import androidx.compose.material.CheckboxDefaults
@@ -22,15 +21,20 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.common.colorGrayWindow2
 import com.example.common.colorText
 import com.example.common.colorTextSecondary
+import com.example.common.models.SaldoCell
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun plusik(isIncome: Boolean = true, parentIndex: Int) {
     var saldoStrokeAmount = remember { mutableStateOf("") }
@@ -76,7 +80,13 @@ internal fun plusik(isIncome: Boolean = true, parentIndex: Int) {
                 )
                 TextField(
                     modifier = Modifier.fillMaxWidth()//.height(40.dp)
-                        .background(Color.Transparent),
+                        .background(Color.Transparent).onKeyEvent {
+                            if (it.key == Key.Enter){
+                                actionToSaveChanges()
+                                true
+                            }
+                            false
+                        },
                     //value = newCellSaldo.value.amount.toString(),
                     value = saldoStrokeAmount.value,
                     colors = colorFields,
@@ -98,7 +108,13 @@ internal fun plusik(isIncome: Boolean = true, parentIndex: Int) {
                 )
                 TextField(
                     modifier = Modifier.fillMaxWidth()//.height(40.dp)
-                        .background(Color.Transparent),
+                        .background(Color.Transparent).onKeyEvent {
+                            if (it.key == Key.Enter){
+                                actionToSaveChanges()
+                                true
+                            }
+                            false
+                        },
                     value = saldoStrokeName.value ?: "",
                     colors = colorFields,
                     onValueChange = {
@@ -117,7 +133,7 @@ internal fun plusik(isIncome: Boolean = true, parentIndex: Int) {
                         onNext = {actionToSaveChanges()},
                         onSend = {actionToSaveChanges()}
                     )
-                    )
+                )
                 Spacer(Modifier.fillMaxWidth().height(3.dp))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(

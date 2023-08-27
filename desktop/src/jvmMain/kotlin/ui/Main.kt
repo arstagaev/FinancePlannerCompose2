@@ -2,9 +2,9 @@ package ui
 
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import com.example.common.ui.mainscreen.AppX2
+import com.example.common.ui.main_screen.MainDashboard
 import com.example.common.encodeForSave
-import com.example.common.ui.mainscreen.initital
+import com.example.common.ui.main_screen.initital
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 fun main() = application {
 
-    Window(onCloseRequest = {
+    Window(title = "TFinance & Salary Planner", onCloseRequest = {
         CoroutineScope(CoroutineName("maim_app")).launch {
             encodeForSave()
             exitApplication()
@@ -27,7 +27,7 @@ fun main() = application {
         initital()
 
         //MaterialTheme(colors = darkFinColors)
-        AppX2()
+        MainDashboard()
     }
 }
 

@@ -1,4 +1,4 @@
-package com.example.common.ui.mainscreen
+package com.example.common.ui.main_screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,9 +10,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +22,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -28,8 +33,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.common.colorText
+import com.example.common.colorTextSecondary
+import com.example.common.models.SaldoCell
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.awt.event.KeyEvent
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -55,31 +64,64 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
         Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 2.dp, start = 5.dp, end = 5.dp),
         shape = RoundedCornerShape(5.dp),
         elevation = 10.dp) {
+        val colorFieldsDebit = TextFieldDefaults.textFieldColors(
+            backgroundColor = Color.Transparent, textColor = colorTextDebitTitle,
+            focusedLabelColor = colorTextDebitTitle, unfocusedLabelColor = colorTextSecondary,
+            placeholderColor = colorTextDebitTitle,
+            unfocusedIndicatorColor = colorTextSecondary, focusedIndicatorColor = colorTextDebitTitle
+        )
 
+        val colorFieldsCredit = TextFieldDefaults.textFieldColors(
+            backgroundColor = Color.Transparent, textColor = colorTextCreditTitle,
+            focusedLabelColor = colorTextCreditTitle, unfocusedLabelColor = colorTextSecondary,
+            placeholderColor = colorTextCreditTitle,
+            unfocusedIndicatorColor = colorTextSecondary, focusedIndicatorColor = colorTextCreditTitle
+        )
         Column(
             Modifier.fillMaxSize()//.width(100.dp)
                 .background(if (isIncome) colorDebitStroke else colorCreditStroke)
         ) {
             if (isEdit.value) {
+
                 TextField(
                     modifier = Modifier.fillMaxWidth()//.height(40.dp)
-                        .background(if (isIncome) colorDebitStroke else colorCreditStroke),
-                    value = saldoStrokeAmount.value.toString(),
+                        .background(Color.Transparent).onKeyEvent {
+                            if (it.key == Key.Enter){
+                                actionToSaveChanges()
+                                true
+                            }
+                            false
+                        },
+                    //value = newCellSaldo.value.amount.toString(),
+                    value = saldoStrokeAmount.value,
+                    colors = if (isIncome) colorFieldsDebit else colorFieldsCredit,
                     onValueChange = {
                         val newNum = it.filter { it.isDigit() }
                         if (newNum.isNotEmpty()) {
                             saldoStrokeAmount.value = newNum
                         }
-                        //println("->>${currentBudgetX.value.joinToString()}")
-                        //println("stroke ${saldoStrokeAmount.value} ${CalcModule2.currentBudgetX.value.joinToString()}")
                     },
-                    textStyle = TextStyle.Default.copy(fontSize = 15.sp)
+                    label = { Text("Amount", color = colorTextDebitTitle, fontSize = 8.sp) },
+                    textStyle = TextStyle.Default.copy(fontSize = 20.sp, color = colorTextDebitTitle, fontWeight = FontWeight.Bold),
+                    keyboardActions = KeyboardActions(
+                        onDone = { actionToSaveChanges() },
+                        onSearch = { actionToSaveChanges() },
+                        onGo = {actionToSaveChanges()},
+                        onNext = {actionToSaveChanges()},
+                        onSend = {actionToSaveChanges()}
+                    )
                 )
                 TextField(
                     modifier = Modifier.fillMaxWidth()//.height(40.dp)
-                        .background(Color.Transparent),
-                    value = saldoStrokeName.value?:"",
-
+                        .background(Color.Transparent).onKeyEvent {
+                            if (it.key == Key.Enter){
+                                actionToSaveChanges()
+                                true
+                            }
+                            false
+                        },
+                    value = saldoStrokeName.value ?: "",
+                    colors = if (isIncome) colorFieldsDebit else colorFieldsCredit,
                     onValueChange = {
                         if (it.isNotEmpty()) {
                             saldoStrokeName.value = it
@@ -87,9 +129,31 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                             //isEditByHuman.value = true
                         }
                     },
-                    label = { Text("Enter name for source of amount", fontSize = 10.sp) },
-                    textStyle = TextStyle.Default.copy(fontSize = 10.sp),
+                    label = { Text("Name", color = colorTextDebitTitle, fontSize = 8.sp) },
+                    textStyle = TextStyle.Default.copy(fontSize = 20.sp, color = colorTextDebitTitle),
+                    keyboardActions = KeyboardActions(
+                        onDone = { actionToSaveChanges() },
+                        onSearch = { actionToSaveChanges() },
+                        onGo = {actionToSaveChanges()},
+                        onNext = {actionToSaveChanges()},
+                        onSend = {actionToSaveChanges()}
+                    )
                 )
+//                TextField(
+//                    modifier = Modifier.fillMaxWidth()//.height(40.dp)
+//                        .background(Color.Transparent),
+//                    value = saldoStrokeName.value?:"",
+//
+//                    onValueChange = {
+//                        if (it.isNotEmpty()) {
+//                            saldoStrokeName.value = it
+//                            //newCellSaldo.value.name = it
+//                            //isEditByHuman.value = true
+//                        }
+//                    },
+//                    label = { Text("Name", fontSize = 10.sp) },
+//                    textStyle = TextStyle.Default.copy(fontSize = 10.sp),
+//                )
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     Row(Modifier.clickable {
                         deleteCell(monthIndex = parentIndex, saldoCell = saldoCell)

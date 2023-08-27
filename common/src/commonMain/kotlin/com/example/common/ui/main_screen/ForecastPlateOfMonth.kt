@@ -1,4 +1,4 @@
-package com.example.common
+package com.example.common.ui.main_screen
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -22,10 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.common.ui.mainscreen.colorCreditResult
-import com.example.common.ui.mainscreen.colorDebitResult
-import com.example.common.ui.mainscreen.futureFall
-import com.example.common.ui.mainscreen.updateWhole
+import com.example.common.enums.SaldoMode
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.datetime.DatePeriod
@@ -38,6 +35,7 @@ fun forecastGhostMonth(
 ) {
     var futureSaldo = remember { futureFall }
     var dt = remember { mutableStateOf("") }
+    var saldoModeInternal = remember { saldoMode }
 
     LaunchedEffect(futureSaldo.value) {
         var dateCustom = futureSaldo.value?.startForecastDate?.plus(DatePeriod(months = index))
@@ -49,6 +47,13 @@ fun forecastGhostMonth(
             .padding(5.dp),
         elevation = 10.dp
     ) {
+
+        if (saldoModeInternal.value == SaldoMode.SETUP_SETTINGS || saldoModeInternal.value == SaldoMode.LOADING) {
+
+            Box(Modifier.fillMaxSize().shimmerEffect())
+            return@Card
+        }
+
         Box(Modifier.fillMaxSize().clickable {  }) {
             Text("${dt?.value}", modifier = Modifier.fillMaxSize().padding(top = (1).dp,start = 10.dp).align(
                 Alignment.TopCenter),
