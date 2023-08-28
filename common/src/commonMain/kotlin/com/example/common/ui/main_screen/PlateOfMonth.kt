@@ -85,7 +85,8 @@ fun PlateOfMonth(parentIndex: Int, parentItem: ArrayList<SaldoCell>) {
                     Spacer(Modifier.fillMaxWidth().height(3.dp))
                     LazyColumn {
                         itemsIndexed(
-                            parentItem.filter { it.amount > 0 }.sortedByDescending { it.amount },
+                            parentItem.filter { it.amount > 0 }//.sortedByDescending { it.amount }
+                            ,
                             itemContent = { index, item ->
                                 strokeAgregator(item, parentIndex, index)
                                 //Text(">${item}")
@@ -139,7 +140,8 @@ fun PlateOfMonth(parentIndex: Int, parentItem: ArrayList<SaldoCell>) {
                 ) {
                     Spacer(Modifier.fillMaxWidth().height(3.dp))
                     LazyColumn {
-                        itemsIndexed(parentItem.filter { it.amount < 0 }.sortedByDescending { it.amount }, itemContent = { index, itemStroke ->
+                        itemsIndexed(parentItem.filter { it.amount < 0 }//.sortedByDescending { it.amount }
+                            , itemContent = { index, itemStroke ->
                             //Text(">${item}")
                             strokeAgregator(itemStroke, parentIndex, index, isIncome = false)
 

@@ -80,11 +80,10 @@ var stateFall = arrayListOf<ArrayList<SaldoCell>>(
 private val waterFall = MutableSharedFlow<ArrayList<ArrayList<SaldoCell>>>()
 internal val resultFall = MutableSharedFlow<ArrayList<ResultSaldo>>()
 val futureFall = mutableStateOf<FutureSaldo?>(null)
-
+val paybackPeriod = mutableStateOf<String>("")
 internal var resultArray = arrayListOf<ResultSaldo>()
 
 var isEditMode = mutableStateOf(false)
-//var inputDateMode = mutableStateOf(false)
 var saldoMode = mutableStateOf<SaldoMode>(SaldoMode.LOADING)
 
 
@@ -135,6 +134,9 @@ fun updateWhole() {
     }
 
     stateFall.forEachIndexed { index, month ->
+        //stateFall[index] = month.sortedBy { it.amount } as ArrayList<SaldoCell>
+        stateFall[index] = ArrayList( month.sortedBy { it.amount })
+
         var incList = ArrayList(month.filter { it != null && it.amount > 0  })
         var expList = ArrayList(month.filter { it != null && it.amount < 0  })
 
@@ -304,6 +306,7 @@ fun MainDashboard() {
     val col = waterFall.collectAsState(
         stateFall
     )
+    val paybackPeriod_Internal = remember { paybackPeriod }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -402,14 +405,12 @@ fun MainDashboard() {
                 } else {
                     saldoMode.value = SaldoMode.SHOW
                 }
-                //inputDateMode.value = !inputDateMode.value
             }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceAround) {
                 Text(modifier = Modifier.padding(4.dp), text = "Payback period:", color= Color.Black, textAlign = TextAlign.Center)
-                Text(modifier = Modifier.padding(4.dp), text = "3 Years", color= Color.Black, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,style = MaterialTheme.typography.body1)
+                Text(modifier = Modifier.padding(4.dp), text = paybackPeriod_Internal.value, color= Color.Black, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,style = MaterialTheme.typography.body1)
             }
         }
     }
-
 }
 
 fun actionToSaveChanges() {

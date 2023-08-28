@@ -21,25 +21,27 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.common.colorText
 import com.example.common.colorTextSecondary
 import com.example.common.models.SaldoCell
 import com.example.common.utils.currency
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.awt.event.KeyEvent
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -47,18 +49,25 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
     if (!stateFall[parentIndex].contains(saldoCell)) return
 
     val oldvalue = saldoCell.amount
-    var isEdit = remember { mutableStateOf(false) }
+    var isEditLocal = remember { mutableStateOf(false) }
     var detailShow = remember { mutableStateOf(ShowWithDescription) }
-    var saldoStrokeAmount = remember { mutableStateOf("${saldoCell.amount}") }
+    var saldoStrokeAmount = remember { mutableStateOf(TextFieldValue(text = "${saldoCell.amount}", selection = TextRange( "${saldoCell.amount}".length))) }
     var saldoStrokeName = remember { mutableStateOf("${saldoCell.name}") }
     var isShowRemoveIcon = remember { mutableStateOf(false) }
+    // initialize focus reference to be able to request focus programmatically
+    val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(isEditMode.value) {
+
+
         if (!isEditMode.value) {
-            if (isEdit.value) {
-                updateStroke(oldSaldo = saldoCell, newSaldoCell = SaldoCell(amount = saldoStrokeAmount.value.toInt(), name = saldoStrokeName.value, saldoCell.isConst), parentIndex,)
-                isEdit.value = false
+            if (isEditLocal.value) {
+                updateStroke(oldSaldo = saldoCell, newSaldoCell = SaldoCell(amount = saldoStrokeAmount.value.text.toInt(), name = saldoStrokeName.value, saldoCell.isConst), parentIndex,)
+                isEditLocal.value = false
             }
+        }
+        if (isEditLocal.value) {
+            focusRequester.requestFocus()
         }
     }
     Card (
@@ -82,7 +91,7 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
             Modifier.fillMaxSize()//.width(100.dp)
                 .background(if (isIncome) colorDebitStroke else colorCreditStroke)
         ) {
-            if (isEdit.value) {
+            if (isEditLocal.value) {
 
                 TextField(
                     modifier = Modifier.fillMaxWidth()//.height(40.dp)
@@ -92,14 +101,16 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                                 true
                             }
                             false
-                        },
+                        }// add focusRequester modifier
+                        .focusRequester(focusRequester)
+                    ,
                     //value = newCellSaldo.value.amount.toString(),
                     value = saldoStrokeAmount.value,
                     colors = if (isIncome) colorFieldsDebit else colorFieldsCredit,
                     onValueChange = { newStroke ->
-                        val newNum = newStroke.filter { it.isDigit() || it == '-' }
+                        val newNum = newStroke.text.filter { it.isDigit() || it == '-' }
                         if (newNum.isNotEmpty()) {
-                            saldoStrokeAmount.value = newNum
+                            saldoStrokeAmount.value = TextFieldValue(text = newNum, selection = newStroke.selection)
                         }
                     },
                     label = { Text("Amount", color = if (isIncome) colorTextDebitTitle else colorTextCreditTitle, fontSize = 8.sp) },
@@ -181,7 +192,7 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                             onTap = {
                                 GlobalScope.launch {
                                     isEditMode.value = true
-                                    isEdit.value = true
+                                    isEditLocal.value = true
                                     //delay(100)
                                 }
                             }
