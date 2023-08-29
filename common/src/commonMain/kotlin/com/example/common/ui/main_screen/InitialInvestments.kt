@@ -48,6 +48,7 @@ fun InitialInvestments() {
     var saldoStrokeAmount = remember { mutableStateOf("${configurationOfSaldo.value.investmentsAmount}") }
 
     var saldoModeInternal = remember { saldoMode }
+    val showTipsInternal = remember { showTips }
 
     LaunchedEffect(isEditMode.value, configurationOfSaldo.value) {
         println("TRIGGERED ${configurationOfSaldo.value.investmentsAmount}")
@@ -173,44 +174,35 @@ fun InitialInvestments() {
                             onSend = {actionToSaveChanges()}
                         )
                     )
-//                    TextField(
-//                        modifier = Modifier.fillMaxWidth()//.height(40.dp)
-//                            .background(Color.Transparent),
-//                        value = saldoStrokeName.value?:"",
-//
-//                        onValueChange = {
-//                            if (it.isNotEmpty()) {
-//                                saldoStrokeName.value = it
-//                                //newCellSaldo.value.name = it
-//                                //isEditByHuman.value = true
-//                            }
-//                        },
-//                        label = { Text("Name", fontSize = 10.sp) },
-//                        textStyle = TextStyle.Default.copy(fontSize = 10.sp),
-//                    )
                 } else {
-                    Text("${saldoStrokeAmount.value}".currency(), modifier = Modifier.basicMarquee(iterations = 10).padding(vertical = 5.dp)
-                        //.clickable {}
-                        ,
-                        fontFamily = FontFamily.Default, fontSize = 25.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
-                        overflow = TextOverflow.Ellipsis,
-                        color = colorTextSumMonth //Color.DarkGray
-                    )
-//                    Text(
-//                        "${saldoStrokeAmount.value}",
-//                        modifier = Modifier.basicMarquee(iterations = 10).padding(4.dp)//.align(Alignment.Center)
-//                            ,color = colorText,
-//                        fontSize = 10.sp, fontFamily = FontFamily.Monospace,
-//                        textAlign = TextAlign.Center
-//                    )
-
-                    Text(
-                        "${saldoStrokeName.value}",
-                        modifier = Modifier.basicMarquee(iterations = 10).padding(4.dp)//.align(Alignment.Center)
-                        ,color = colorTextSecondary,
-                        fontSize = 10.sp, fontFamily = FontFamily.Monospace,
-                        textAlign = TextAlign.Center
-                    )
+                    if (showTipsInternal.value) {
+                        Text("Initial sum on hands, in the start of count", modifier = Modifier.shimmerEffectBlue().padding(vertical = 2.dp).basicMarquee(iterations = 10),
+                            fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
+                            color = Color.Black
+                        )
+                    } else {
+                        Text(
+                            "${saldoStrokeAmount.value}".currency(),
+                            modifier = Modifier.basicMarquee(iterations = 10)
+                                .padding(vertical = 5.dp)
+                            //.clickable {}
+                            ,
+                            fontFamily = FontFamily.Default,
+                            fontSize = 25.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            textAlign = TextAlign.Center,
+                            overflow = TextOverflow.Ellipsis,
+                            color = colorTextSumMonth //Color.DarkGray
+                        )
+                        Text(
+                            "${saldoStrokeName.value}",
+                            modifier = Modifier.basicMarquee(iterations = 10)
+                                .padding(4.dp)//.align(Alignment.Center)
+                            , color = colorTextSecondary,
+                            fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }

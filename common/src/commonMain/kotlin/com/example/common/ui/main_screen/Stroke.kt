@@ -32,6 +32,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.withStyle
@@ -56,13 +57,20 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
     var isShowRemoveIcon = remember { mutableStateOf(false) }
     // initialize focus reference to be able to request focus programmatically
     val focusRequester = remember { FocusRequester() }
+    val showTipsInternal = remember { showTips }
 
     LaunchedEffect(isEditMode.value) {
 
-
-        if (!isEditMode.value) {
+        if (!isEditMode.value && saldoStrokeAmount.value.toString().isNotEmpty() && saldoStrokeAmount.value.toString().isNotBlank()) {
             if (isEditLocal.value) {
                 updateStroke(oldSaldo = saldoCell, newSaldoCell = SaldoCell(amount = saldoStrokeAmount.value.text.toInt(), name = saldoStrokeName.value, saldoCell.isConst), parentIndex,)
+                actionToSaveChanges()
+                isEditLocal.value = false
+
+            }
+        }
+        if (!isEditMode.value) {
+            if (isEditLocal.value) {
                 isEditLocal.value = false
             }
         }
@@ -88,8 +96,12 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
             unfocusedIndicatorColor = colorTextSecondary, focusedIndicatorColor = colorTextCreditTitle
         )
         Column(
-            Modifier.fillMaxSize()//.width(100.dp)
-                .background(if (isIncome) colorDebitStroke else colorCreditStroke)
+            if (showTipsInternal.value)
+                Modifier.fillMaxSize()//.width(100.dp)
+                    .shimmerEffectBlue()
+            else
+                Modifier.fillMaxSize()//.width(100.dp)
+                    .background(if (isIncome) colorDebitStroke else colorCreditStroke)
         ) {
             if (isEditLocal.value) {
 
@@ -97,7 +109,12 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                     modifier = Modifier.fillMaxWidth()//.height(40.dp)
                         .background(Color.Transparent).onKeyEvent {
                             if (it.key == Key.Enter) {
-                                actionToSaveChanges()
+                                //actionToSaveChanges()
+                                isEditMode.value = false
+                                true
+                            }
+                            if (it.key == Key.Escape) {
+                                isEditMode.value = false
                                 true
                             }
                             false
@@ -127,7 +144,7 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                     modifier = Modifier.fillMaxWidth()//.height(40.dp)
                         .background(Color.Transparent).onKeyEvent {
                             if (it.key == Key.Enter){
-                                actionToSaveChanges()
+                                isEditMode.value = false
                                 true
                             }
                             false
@@ -204,9 +221,13 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
 //                        Text(modifier = Modifier.padding(start = 5.dp, end = 5.dp), text ="${if (saldoCell.isConst) "\uD83D\uDD04" else ""}")
 //                    } else {
 //                                            }
+                    if (showTipsInternal.value) {
+                        Text(modifier = Modifier.padding(start = 5.dp), text = if(!isIncome) "Your stroke of expense (e.g. buying laptop)" else "Your stroke of income (e.g. salary)", fontStyle = FontStyle.Italic)
+                    }else {
+                        Text(modifier = Modifier.padding(start = 5.dp), text =text1)
+                        Text(modifier = Modifier.padding(start = 5.dp, end = 5.dp), text ="${if (saldoCell.isConst) "\uD83D\uDD04" else ""}")
 
-                    Text(modifier = Modifier.padding(start = 5.dp), text =text1)
-                    Text(modifier = Modifier.padding(start = 5.dp, end = 5.dp), text ="${if (saldoCell.isConst) "\uD83D\uDD04" else ""}")
+                    }
 
                 }
             }

@@ -24,6 +24,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -46,6 +47,7 @@ fun PlateOfMonth(parentIndex: Int, parentItem: ArrayList<SaldoCell>) {
     val res = resultFall.collectAsState(resultArray)
     var saldoModeInternal = remember { saldoMode }
     val dt = if (res.value.size > parentIndex) res.value[parentIndex].date else null
+    val showTipsInternal = remember { showTips }
 
     Card(
         modifier = Modifier
@@ -64,7 +66,6 @@ fun PlateOfMonth(parentIndex: Int, parentItem: ArrayList<SaldoCell>) {
             colorCard
             //Color.LightGray
         )) {
-
             Text("${dt?.year} ${dt?.month} ", modifier = Modifier.fillMaxWidth().padding(top = (1).dp,start = 10.dp).align(
                 Alignment.TopCenter)
 //                .clickable {
@@ -74,6 +75,7 @@ fun PlateOfMonth(parentIndex: Int, parentItem: ArrayList<SaldoCell>) {
                 fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Light,
                 color = fontTitleMonth//Color.DarkGray
             )
+
 
             Column(
                 modifier = Modifier.fillMaxSize().padding(top = 15.dp), horizontalAlignment = Alignment.CenterHorizontally
@@ -87,7 +89,7 @@ fun PlateOfMonth(parentIndex: Int, parentItem: ArrayList<SaldoCell>) {
                     Spacer(Modifier.fillMaxWidth().height(3.dp))
                     LazyColumn {
                         itemsIndexed(
-                            parentItem.filter { it.amount > 0 }//.sortedByDescending { it.amount }
+                            parentItem.filter { it.amount > 0 }.sortedByDescending { it.amount }
                             ,
                             itemContent = { index, item ->
                                 strokeAgregator(item, parentIndex, index)
@@ -106,33 +108,60 @@ fun PlateOfMonth(parentIndex: Int, parentItem: ArrayList<SaldoCell>) {
                     Row(modifier = Modifier.fillMaxWidth().background(
                         colorDebitResult
                     )) {
-                        Text("Σ Income:"+"${if (res.value.size > parentIndex) res.value[parentIndex].income else 0}", modifier = Modifier.padding(vertical = 2.dp),
-                            fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
-                            color = colorTextDebitTitle
+                        if (showTipsInternal.value) {
+                            Text("Cumulative sum of incomes", modifier = Modifier.shimmerEffectBlue().padding(vertical = 2.dp).basicMarquee(iterations = 10),
+                                fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
+                                color = Color.Black
+                            )
+                        } else {
+                            Text("Σ Income:"+"${if (res.value.size > parentIndex) res.value[parentIndex].income else 0}", modifier = Modifier.padding(vertical = 2.dp),
+                                fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
+                                color = colorTextDebitTitle
+                            )
+                        }
+
+                    }
+                    if (showTipsInternal.value) {
+                        Text("Total sum on hands, at the end of the month", modifier = Modifier.shimmerEffectBlue().padding(vertical = 2.dp).basicMarquee(iterations = 10),
+                            fontFamily = FontFamily.Default, fontSize = 20.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
+                            color = Color.Black
+                        )
+                    } else {
+                        Text(
+                            "${if (res.value.size > parentIndex) res.value[parentIndex].sum else 0}".currency(),
+                            modifier = Modifier.basicMarquee(iterations = 10)
+                                .padding(vertical = 5.dp).clickable {
+                                GlobalScope.async {
+                                    updateWhole()
+                                }
+                            },
+                            fontFamily = FontFamily.Default,
+                            fontSize = 25.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            textAlign = TextAlign.Center,
+                            overflow = TextOverflow.Ellipsis,
+                            color = colorTextSumMonth //Color.DarkGray
                         )
                     }
-
-                    Text("${ if (res.value.size > parentIndex) res.value[parentIndex].sum else 0}".currency(), modifier = Modifier.basicMarquee(iterations = 10).padding(vertical = 5.dp).clickable {
-                        GlobalScope.async {
-                            updateWhole()
-                        }
-                    },
-                        fontFamily = FontFamily.Default, fontSize = 25.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
-                        overflow = TextOverflow.Ellipsis,
-                        color = colorTextSumMonth //Color.DarkGray
-                    )
                     Row(modifier = Modifier.fillMaxWidth().background(
                         colorCreditResult
                     )) {
-                        Text(
-                            "Σ Expense: ${if (res.value.size > parentIndex) res.value[parentIndex].expense else 0}",
-                            modifier = Modifier.padding(vertical = 2.dp),
-                            fontFamily = FontFamily.Default,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            color = colorTextCreditTitle
-                        )
+                        if (showTipsInternal.value) {
+                            Text("Cumulative sum of expenses", modifier = Modifier.shimmerEffectBlue().padding(vertical = 2.dp).basicMarquee(iterations = 10),
+                                fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
+                                color = Color.Black
+                            )
+                        } else {
+                            Text(
+                                "Σ Expense: ${if (res.value.size > parentIndex) res.value[parentIndex].expense else 0}",
+                                modifier = Modifier.padding(vertical = 2.dp),
+                                fontFamily = FontFamily.Default,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                color = colorTextCreditTitle
+                            )
+                        }
                     }
                 }
 
@@ -142,7 +171,7 @@ fun PlateOfMonth(parentIndex: Int, parentItem: ArrayList<SaldoCell>) {
                 ) {
                     Spacer(Modifier.fillMaxWidth().height(3.dp))
                     LazyColumn {
-                        itemsIndexed(parentItem.filter { it.amount < 0 }//.sortedByDescending { it.amount }
+                        itemsIndexed(parentItem.filter { it.amount < 0 }.sortedByDescending { it.amount }
                             , itemContent = { index, itemStroke ->
                             //Text(">${item}")
                             strokeAgregator(itemStroke, parentIndex, index, isIncome = false)

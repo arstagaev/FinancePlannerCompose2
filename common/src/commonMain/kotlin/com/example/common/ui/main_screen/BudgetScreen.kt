@@ -12,10 +12,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -23,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.common.colorGrayWindow2
 import com.example.common.colorText
+import com.example.common.colorTextSumMonth
 import com.example.common.decodeFromFile
 import com.example.common.saveNewBudgetJSON
 import com.example.common.enums.SaldoMode
@@ -88,7 +92,7 @@ internal var resultArray = arrayListOf<ResultSaldo>()
 var isEditMode = mutableStateOf(false)
 var saldoMode = mutableStateOf<SaldoMode>(SaldoMode.LOADING)
 
-
+val showTips = mutableStateOf<Boolean>(false)
 
 //fun initital() {
 //
@@ -414,40 +418,46 @@ fun BudgetScreen() {
 
             Box(Modifier.fillMaxWidth().height(100.dp).background(Color.Red))
         }
-
-        Row(modifier = Modifier.padding(10.dp).align(Alignment.BottomStart), horizontalArrangement = Arrangement.SpaceBetween) {
-            if (isAtStart) {
-                Card(modifier = Modifier.size(60.dp).padding(10.dp), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
-                    Box(modifier = Modifier.fillMaxSize().clickable {
-                        showBudget.value = false
-//                        if (saldoMode.value == SaldoMode.SHOW) {
-//                            saldoMode.value = SaldoMode.SETUP_SETTINGS
-//                        } else {
-//                            updateWhole()
-//                            saldoMode.value = SaldoMode.SHOW
-//                        }
-                        //inputDateMode.value = !inputDateMode.value
-                    }) {
-                        Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.ArrowBack, contentDescription = "Settings")
+        Column(modifier = Modifier.padding(10.dp).align(Alignment.BottomStart)) {
+            Row(modifier = Modifier, horizontalArrangement = Arrangement.SpaceBetween) {
+                if (isAtStart) {
+                    Card(modifier = Modifier.size(60.dp).padding(10.dp), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
+                        Box(modifier = Modifier.fillMaxSize().clickable {
+                            showTips.value = !showTips.value
+                        }) {
+                            Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.Info, contentDescription = "Settings")
+                        }
                     }
                 }
             }
 
-
-            Card(modifier = Modifier.size(60.dp).padding(10.dp), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
-                Box(modifier = Modifier.fillMaxSize().clickable {
-                    if (saldoMode.value == SaldoMode.SHOW) {
-                        saldoMode.value = SaldoMode.SETUP_SETTINGS
-                    } else {
-                        updateWhole()
-                        saldoMode.value = SaldoMode.SHOW
+            Row(modifier = Modifier, horizontalArrangement = Arrangement.SpaceBetween) {
+                if (isAtStart) {
+                    Card(modifier = Modifier.size(60.dp).padding(10.dp), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
+                        Box(modifier = Modifier.fillMaxSize().clickable {
+                            showBudget.value = false
+                        }) {
+                            Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.ArrowBack, contentDescription = "Settings")
+                        }
                     }
-                    //inputDateMode.value = !inputDateMode.value
-                }) {
-                    Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.Settings, contentDescription = "Settings")
+                }
+
+
+                Card(modifier = Modifier.size(60.dp).padding(10.dp), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
+                    Box(modifier = Modifier.fillMaxSize().clickable {
+                        if (saldoMode.value == SaldoMode.SHOW) {
+                            saldoMode.value = SaldoMode.SETUP_SETTINGS
+                        } else {
+                            updateWhole()
+                            saldoMode.value = SaldoMode.SHOW
+                        }
+                    }) {
+                        Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.Settings, contentDescription = "Settings")
+                    }
                 }
             }
         }
+
 
 
         Card(modifier = Modifier.width(250.dp)
@@ -463,6 +473,19 @@ fun BudgetScreen() {
                 Text(modifier = Modifier.padding(4.dp), text = paybackPeriod_Internal.value, color= Color.Black, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,style = MaterialTheme.typography.body1)
             }
         }
+
+//        Row(modifier = positionTips.value.modifier.align(Alignment.TopStart), horizontalArrangement = Arrangement.SpaceEvenly) {
+//            Text("\uD83D\uDC46", fontSize = 50.sp)
+//            Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.SpaceBetween) {
+//                Text(modifier= Modifier.background(Color.LightGray).alpha(0.5f),
+//                    text = "kasjlfaalkfj",color= Color.Black, fontSize = 30.sp)
+//                Text(modifier= Modifier.shimmerEffectBlue().clickable {
+//                    changePositionOfTips()
+//                }, text = "next tip",color= Color.Black, fontSize = 30.sp)
+//            }
+//        }
+
+        //Box(Modifier.fillMaxSize().background(Color.Black).alpha(0.4f).clip())
     }
 }
 
@@ -470,7 +493,7 @@ fun actionToSaveChanges() {
 
     CoroutineScope(CoroutineName("Action to save")).launch {
         isEditMode.value = false
-        updateWhole()
+        //updateWhole()
         saveNewBudgetJSON()
     }
 
