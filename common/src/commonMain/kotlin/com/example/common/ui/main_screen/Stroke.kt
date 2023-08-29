@@ -50,7 +50,7 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
 
     val oldvalue = saldoCell.amount
     var isEditLocal = remember { mutableStateOf(false) }
-    var detailShow = remember { mutableStateOf(ShowWithDescription) }
+    //var detailShow = remember { mutableStateOf(ShowWithDescription) }
     var saldoStrokeAmount = remember { mutableStateOf(TextFieldValue(text = "${saldoCell.amount}", selection = TextRange( "${saldoCell.amount}".length))) }
     var saldoStrokeName = remember { mutableStateOf("${saldoCell.name}") }
     var isShowRemoveIcon = remember { mutableStateOf(false) }
@@ -187,7 +187,7 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                             onDoubleTap = {
                             },
                             onLongPress = {
-                                detailShow.value = !detailShow.value
+                                //detailShow.value = !detailShow.value
                             },
                             onTap = {
                                 GlobalScope.launch {
@@ -199,13 +199,14 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                         )
                     }, horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    if (!detailShow.value) {
-                        Text(modifier = Modifier.padding(start = 5.dp), text = "${saldoCell.amount} ")
-                        Text(modifier = Modifier.padding(start = 5.dp, end = 5.dp), text ="${if (saldoCell.isConst) "\uD83D\uDD04" else ""}")
-                    } else {
-                        Text(modifier = Modifier.padding(start = 5.dp), text =text1)
-                        Text(modifier = Modifier.padding(start = 5.dp, end = 5.dp), text ="${if (saldoCell.isConst) "\uD83D\uDD04" else ""}")
-                    }
+//                    if (!detailShow.value) {
+//                        Text(modifier = Modifier.padding(start = 5.dp), text = "${saldoCell.amount} ")
+//                        Text(modifier = Modifier.padding(start = 5.dp, end = 5.dp), text ="${if (saldoCell.isConst) "\uD83D\uDD04" else ""}")
+//                    } else {
+//                                            }
+
+                    Text(modifier = Modifier.padding(start = 5.dp), text =text1)
+                    Text(modifier = Modifier.padding(start = 5.dp, end = 5.dp), text ="${if (saldoCell.isConst) "\uD83D\uDD04" else ""}")
 
                 }
             }

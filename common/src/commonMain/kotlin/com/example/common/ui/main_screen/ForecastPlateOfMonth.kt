@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -22,7 +23,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.common.colorCard
+import com.example.common.colorText
+import com.example.common.colorTextSecondary
+import com.example.common.colorTextSumMonth
 import com.example.common.enums.SaldoMode
+import com.example.common.utils.currency
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.datetime.DatePeriod
@@ -41,6 +47,7 @@ fun forecastGhostMonth(
         var dateCustom = futureSaldo.value?.startForecastDate?.plus(DatePeriod(months = index))
         dt.value = "${dateCustom?.year} ${dateCustom?.month}"
     }
+
     Card(
         modifier = Modifier
             .width(150.dp)
@@ -54,25 +61,24 @@ fun forecastGhostMonth(
             return@Card
         }
 
-        Box(Modifier.fillMaxSize().clickable {  }) {
+        Box(Modifier.fillMaxSize().background(colorCard)) {
             Text("${dt?.value}", modifier = Modifier.fillMaxSize().padding(top = (1).dp,start = 10.dp).align(
                 Alignment.TopCenter),
                 fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Light,
-                color = Color.DarkGray
+                color = colorText
             )
 
             Column(
                 modifier = Modifier.fillMaxSize().padding(top = 15.dp), horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Row(
-                    Modifier.weight(3f).background(Color.Green))
+                    Modifier.weight(3f)//.background(colorDebitResult)
+                )
                 {
                     LazyColumn {
                         itemsIndexed(
                             futureSaldo.value?.incomes ?: listOf(),
                             itemContent = { index, item ->
-                                //strokeAgregator(item, parentIndex, index)
-                                //Text(modifier = Modifier.fillMaxWidth(), text = ">${item}")
                                 strokeFutureSaldo(item)
                             }
                         )
@@ -81,7 +87,7 @@ fun forecastGhostMonth(
                 // SUMMA:
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.SpaceBetween) {
                     Row(modifier = Modifier.fillMaxWidth().background(colorDebitResult)) {
-                        Text("${futureSaldo.value?.income}", modifier = Modifier.padding(vertical = 2.dp),
+                        Text("Σ Income:"+"${futureSaldo.value?.income}", modifier = Modifier.padding(vertical = 2.dp),
                             fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
                             //color = Color.Green
                         )
@@ -92,17 +98,13 @@ fun forecastGhostMonth(
                         2 -> futureSaldo.value?.sum2
                         3 -> futureSaldo.value?.sum3
                         else -> futureSaldo.value?.sum3
-                    }}", modifier = Modifier.basicMarquee(iterations = 10).padding(vertical = 5.dp).clickable {
-                        GlobalScope.async {
-                            updateWhole()
-                        }
-                    },
+                    }}".currency(), modifier = Modifier.basicMarquee(iterations = 10).padding(vertical = 5.dp),
                         fontFamily = FontFamily.Default, fontSize = 25.sp, fontWeight = FontWeight.ExtraBold,textAlign = TextAlign.Center,
-                        color = Color.DarkGray
+                        color = colorTextSumMonth
                     )
                     Row(modifier = Modifier.fillMaxWidth().background(colorCreditResult)) {
                         Text(
-                            "${futureSaldo.value?.expense}",
+                            "Σ Expense:"+"${futureSaldo.value?.expense}",
                             modifier = Modifier.padding(vertical = 2.dp),
                             fontFamily = FontFamily.Default,
                             fontSize = 10.sp,
@@ -113,7 +115,7 @@ fun forecastGhostMonth(
                     }
                 }
                 Row(
-                    Modifier.weight(3f).fillMaxSize().background(Color.Red)
+                    Modifier.weight(3f).fillMaxSize()//.background(colorCreditResult)
                 ) {
                     LazyColumn {
                         itemsIndexed(futureSaldo.value?.expenses?: listOf(), itemContent = { index, item ->
@@ -125,7 +127,7 @@ fun forecastGhostMonth(
 
             Box(
                 Modifier.fillMaxSize()
-                .background(color = Color.LightGray.copy(alpha = 0.9f))
+                .background(color = Color.LightGray.copy(alpha = 0.5f))
             )
         }
     }
@@ -133,15 +135,19 @@ fun forecastGhostMonth(
 
 @Composable
 fun strokeFutureSaldo(amount: Int) {
-    Card (Modifier.fillMaxWidth().padding(1.dp),
+
+    Card (Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 2.dp, start = 5.dp, end = 5.dp),
         shape = RoundedCornerShape(5.dp),
         elevation = 10.dp) {
 
-        Column(
+        Row(
             Modifier.fillMaxSize()//.width(100.dp)
-                .background(Color.Transparent)
+                .background(if (amount > 0) colorDebitStroke else colorCreditStroke),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(modifier = Modifier.padding(start = 5.dp), text ="${amount} \uD83D\uDD04")
+            Text(modifier = Modifier.padding(start = 5.dp), text ="${amount}",color = if (amount>0) colorDebitResult else colorCreditResult, fontWeight = FontWeight.Bold)
+            Text(modifier = Modifier.padding(start = 5.dp, end = 5.dp), text ="\uD83D\uDD04")
+
         }
     }
 }

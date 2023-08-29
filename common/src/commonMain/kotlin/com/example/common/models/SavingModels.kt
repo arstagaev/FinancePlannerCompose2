@@ -3,7 +3,10 @@ package com.example.common.models
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class SaveContainer(val data: ArrayList<ArrayList<SaldoCell>>)
+data class SaveContainer(
+    val config: SaldoConfiguration,
+    val data: ArrayList<ArrayList<SaldoCell>>
+)
 
 @Serializable
 data class SaldoConfiguration(

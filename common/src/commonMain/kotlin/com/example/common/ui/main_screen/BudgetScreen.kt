@@ -6,10 +6,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,12 +24,14 @@ import androidx.compose.ui.unit.sp
 import com.example.common.colorGrayWindow2
 import com.example.common.colorText
 import com.example.common.decodeFromFile
-import com.example.common.encodeForSave
+import com.example.common.saveNewBudgetJSON
 import com.example.common.enums.SaldoMode
 import com.example.common.models.FutureSaldo
 import com.example.common.models.ResultSaldo
 import com.example.common.models.SaldoCell
 import com.example.common.models.SaldoConfiguration
+import com.example.common.ui.starter_screen.showBudget
+import com.example.common.utils.generatePaybackPeriod
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
@@ -37,9 +41,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalTime
 import kotlinx.datetime.plus
-import kotlinx.datetime.toKotlinLocalDateTime
 import java.time.LocalDateTime
 
 val colorDebit = Color(0xFF57DE5d)//Color(68,220,96)
@@ -80,7 +82,7 @@ var stateFall = arrayListOf<ArrayList<SaldoCell>>(
 private val waterFall = MutableSharedFlow<ArrayList<ArrayList<SaldoCell>>>()
 internal val resultFall = MutableSharedFlow<ArrayList<ResultSaldo>>()
 val futureFall = mutableStateOf<FutureSaldo?>(null)
-val paybackPeriod = mutableStateOf<String>("")
+val paybackPeriod = mutableStateOf<String>("2+ years")
 internal var resultArray = arrayListOf<ResultSaldo>()
 
 var isEditMode = mutableStateOf(false)
@@ -88,14 +90,14 @@ var saldoMode = mutableStateOf<SaldoMode>(SaldoMode.LOADING)
 
 
 
-fun initital() {
-
-    CoroutineScope(CoroutineName("Init")).launch {
-        decodeFromFile()
-        //delay(1000L)
-        //updateWhole()
-    }
-}
+//fun initital() {
+//
+//    CoroutineScope(CoroutineName("Init")).launch {
+//
+//        //delay(1000L)
+//        //updateWhole()
+//    }
+//}
 fun updateWhole() {
     val crtScp = CoroutineScope(CoroutineName("Update"))
     //saldoMode.value = SaldoMode.LOADING
@@ -132,7 +134,7 @@ fun updateWhole() {
         }
         return
     }
-
+    var alreadyPayback = false
     stateFall.forEachIndexed { index, month ->
         //stateFall[index] = month.sortedBy { it.amount } as ArrayList<SaldoCell>
         stateFall[index] = ArrayList( month.sortedBy { it.amount })
@@ -147,6 +149,11 @@ fun updateWhole() {
         println("<stateFall.forEachIndexed>>>> lastSum:${lastSum}  income:${income} expense:${expense}  investmentsAmount VM:${configurationOfSaldo.value.investmentsAmount} || ${month.joinToString { it.amount.toString() }}")
         dt = startDate.plus(DatePeriod(months = index))
         resultArray.add(ResultSaldo(date = dt, income = income, sum = lastSum, expense = expense))
+
+        if (!alreadyPayback && lastSum > 0) {
+            paybackPeriod.value = generatePaybackPeriod(index+1)
+            alreadyPayback = true
+        }
 
         // future generate
         if (index == stateFall.size-1) {
@@ -179,6 +186,12 @@ fun updateWhole() {
             24 -> sumSecondYear = cumulative
             else -> {}
         }
+
+        if (!alreadyPayback && cumulative > 0) {
+            paybackPeriod.value = generatePaybackPeriod(resultArray.size+1+it)
+            alreadyPayback = true
+        }
+
     }
 
     var forecast = FutureSaldo(
@@ -293,13 +306,32 @@ internal fun deleteCell(monthIndex: Int, saldoCell: SaldoCell, andFuture: Boolea
     updateWhole()
 }
 
+
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
-fun MainDashboard() {
+fun BudgetScreen() {
     val crtcxt = rememberCoroutineScope()
-    LaunchedEffect(true) {
+    val lazyListState = rememberLazyListState()
+    val isAtStart by remember {
+        derivedStateOf {
+            val layoutInfo = lazyListState.layoutInfo
+            val visibleItemsInfo = layoutInfo.visibleItemsInfo
+            lazyListState.firstVisibleItemIndex == 0
+//            else {
+//                val lastVisibleItem = visibleItemsInfo.last()
+//                val viewportHeight = layoutInfo.viewportEndOffset + layoutInfo.viewportStartOffset
+//
+//                (lastVisibleItem.index + 1 == layoutInfo.totalItemsCount &&
+//                        lastVisibleItem.offset + lastVisibleItem.size <= viewportHeight)
+//            }
+        }
+    }
+    LaunchedEffect(showBudget.value) {
+        saldoMode.value = SaldoMode.LOADING
+        decodeFromFile()
         delay(1000L)
         updateWhole()
+        saldoMode.value = SaldoMode.SHOW
     }
     val iem = remember { isEditMode }
     val idm = remember { saldoMode }
@@ -332,7 +364,7 @@ fun MainDashboard() {
             }
             LazyRow(Modifier.fillMaxSize().background(
                 colorGrayWindow2
-            )) {
+            ),state = lazyListState) {
 
                 item {
                     InitialInvestments()
@@ -383,19 +415,40 @@ fun MainDashboard() {
             Box(Modifier.fillMaxWidth().height(100.dp).background(Color.Red))
         }
 
-        Card(modifier = Modifier.size(60.dp).padding(10.dp).align(Alignment.BottomStart), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
-            Box(modifier = Modifier.fillMaxSize().clickable {
-                if (saldoMode.value == SaldoMode.SHOW) {
-                    saldoMode.value = SaldoMode.SETUP_SETTINGS
-                } else {
-                    updateWhole()
-                    saldoMode.value = SaldoMode.SHOW
+        Row(modifier = Modifier.padding(10.dp).align(Alignment.BottomStart), horizontalArrangement = Arrangement.SpaceBetween) {
+            if (isAtStart) {
+                Card(modifier = Modifier.size(60.dp).padding(10.dp), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
+                    Box(modifier = Modifier.fillMaxSize().clickable {
+                        showBudget.value = false
+//                        if (saldoMode.value == SaldoMode.SHOW) {
+//                            saldoMode.value = SaldoMode.SETUP_SETTINGS
+//                        } else {
+//                            updateWhole()
+//                            saldoMode.value = SaldoMode.SHOW
+//                        }
+                        //inputDateMode.value = !inputDateMode.value
+                    }) {
+                        Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.ArrowBack, contentDescription = "Settings")
+                    }
                 }
-                //inputDateMode.value = !inputDateMode.value
-            }) {
-                Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.Settings, contentDescription = "Settings")
+            }
+
+
+            Card(modifier = Modifier.size(60.dp).padding(10.dp), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
+                Box(modifier = Modifier.fillMaxSize().clickable {
+                    if (saldoMode.value == SaldoMode.SHOW) {
+                        saldoMode.value = SaldoMode.SETUP_SETTINGS
+                    } else {
+                        updateWhole()
+                        saldoMode.value = SaldoMode.SHOW
+                    }
+                    //inputDateMode.value = !inputDateMode.value
+                }) {
+                    Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.Settings, contentDescription = "Settings")
+                }
             }
         }
+
 
         Card(modifier = Modifier.width(250.dp)
             .height(65.dp).padding(10.dp).align(Alignment.BottomCenter), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
@@ -418,7 +471,7 @@ fun actionToSaveChanges() {
     CoroutineScope(CoroutineName("Action to save")).launch {
         isEditMode.value = false
         updateWhole()
-        encodeForSave()
+        saveNewBudgetJSON()
     }
 
 }

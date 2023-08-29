@@ -4,8 +4,8 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.MaterialTheme
-import com.example.common.ui.main_screen.MainDashboard
-import com.example.common.encodeForSave
+import com.example.common.ui.main_screen.BudgetScreen
+import com.example.common.storage.encodeForSave
 import com.example.common.ui.main_screen.initital
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -20,7 +20,7 @@ class MainActivity : AppCompatActivity() {
         setContent {
             MaterialTheme {
                 //App()
-                MainDashboard()
+                BudgetScreen()
             }
         }
     }

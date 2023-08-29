@@ -45,6 +45,8 @@ import java.util.ArrayList
 fun PlateOfMonth(parentIndex: Int, parentItem: ArrayList<SaldoCell>) {
     val res = resultFall.collectAsState(resultArray)
     var saldoModeInternal = remember { saldoMode }
+    val dt = if (res.value.size > parentIndex) res.value[parentIndex].date else null
+
     Card(
         modifier = Modifier
             .width(150.dp)
@@ -62,7 +64,7 @@ fun PlateOfMonth(parentIndex: Int, parentItem: ArrayList<SaldoCell>) {
             colorCard
             //Color.LightGray
         )) {
-            val dt = if (res.value.size > parentIndex) res.value[parentIndex].date else null
+
             Text("${dt?.year} ${dt?.month} ", modifier = Modifier.fillMaxWidth().padding(top = (1).dp,start = 10.dp).align(
                 Alignment.TopCenter)
 //                .clickable {
