@@ -35,6 +35,7 @@ import com.example.common.models.ResultSaldo
 import com.example.common.models.SaldoCell
 import com.example.common.models.SaldoConfiguration
 import com.example.common.ui.starter_screen.showBudget
+import com.example.common.utils.StateMachine
 import com.example.common.utils.generatePaybackPeriod
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -225,6 +226,7 @@ fun updateWhole() {
         println("~refresh forecast-> ${forecast.toString()}")
         println("<===========================")
         saldoMode.value = SaldoMode.SHOW
+        saveNewBudgetJSON()
     }
 
 }
@@ -345,7 +347,6 @@ fun BudgetScreen() {
     val paybackPeriod_Internal = remember { paybackPeriod }
 
     Box(modifier = Modifier.fillMaxSize()) {
-
         Column(
             Modifier.fillMaxSize() , verticalArrangement = Arrangement.SpaceAround//.fillMaxSize().background(colorBackgroundDark)//.fillMaxWidth()
         ) {
@@ -486,6 +487,7 @@ fun BudgetScreen() {
 //        }
 
         //Box(Modifier.fillMaxSize().background(Color.Black).alpha(0.4f).clip())
+
     }
 }
 

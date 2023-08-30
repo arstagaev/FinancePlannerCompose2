@@ -12,10 +12,11 @@ import kotlinx.coroutines.launch
 fun main() = application {
 
     Window(title = "TFinance & Salary Planner", onCloseRequest = {
-        CoroutineScope(CoroutineName("maim_app")).launch {
-            saveNewBudgetJSON()
-            exitApplication()
-        }
+        exitApplication()
+//        CoroutineScope(CoroutineName("maim_app")).launch {
+//            //saveNewBudgetJSON()
+//
+//        }
 
     }) {
 

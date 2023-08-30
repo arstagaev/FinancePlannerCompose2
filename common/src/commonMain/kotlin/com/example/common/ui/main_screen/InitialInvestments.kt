@@ -36,6 +36,7 @@ import com.example.common.colorCard
 import com.example.common.colorTextSecondary
 import com.example.common.colorTextSumMonth
 import com.example.common.enums.SaldoMode
+import com.example.common.utils.StateMachine
 import com.example.common.utils.currency
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
@@ -77,12 +78,15 @@ fun InitialInvestments() {
         }
     }
 
-    Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+    Box(Modifier.fillMaxHeight()) {
+        Text(modifier = Modifier.align(Alignment.TopCenter).padding(5.dp), text = "${StateMachine.currentJSONObjectName.fileName}", color = Color.DarkGray)
+
         Card(
             modifier = Modifier
                 .width(150.dp)
                 //.height(100.dp)
-                .padding(5.dp),
+                .padding(5.dp)
+                .align(Alignment.Center),
             elevation = 10.dp,
             shape = RoundedCornerShape(20.dp)
         ) {
