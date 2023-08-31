@@ -48,7 +48,7 @@ internal fun plusik(isIncome: Boolean = true, parentIndex: Int) {
     LaunchedEffect(isEditMode.value) {
         if (!isEditMode.value && saldoStrokeAmount.value.toString().isNotEmpty() && saldoStrokeAmount.value.toString().isNotBlank()) {
             if (isEdit.value) {
-                val newValue = saldoStrokeAmount.value.toInt() ?: 0// newCellSaldo.value.amount.toInt()
+                val newValue = saldoStrokeAmount.value.toInt() ?: 0 // newCellSaldo.value.amount.toInt()
                 println("Prep1 ${newValue} ${checkedState.value}")
 
                 //addNewCell(SaldoCell(amount = newValue * if(isIncome) 1 else -1), parentIndex)
@@ -109,8 +109,12 @@ internal fun plusik(isIncome: Boolean = true, parentIndex: Int) {
                 TextField(
                     modifier = Modifier.fillMaxWidth()//.height(40.dp)
                         .background(Color.Transparent).onKeyEvent {
-                            if (it.key == Key.Enter){
+                            if (it.key == Key.Enter) {
                                 actionToSaveChanges()
+                                true
+                            }
+                            if (it.key == Key.Escape) {
+                                isEditMode.value = false
                                 true
                             }
                             false

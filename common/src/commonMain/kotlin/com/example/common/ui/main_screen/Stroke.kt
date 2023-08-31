@@ -47,7 +47,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome: Boolean = true) {
-    if (!stateFall[parentIndex].contains(saldoCell)) return
+    if (if (stateFall.size > parentIndex) !stateFall[parentIndex].contains(saldoCell) else return) return
 
     val oldvalue = saldoCell.amount
     var isEditLocal = remember { mutableStateOf(false) }

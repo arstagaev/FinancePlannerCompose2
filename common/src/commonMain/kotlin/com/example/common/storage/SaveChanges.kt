@@ -17,7 +17,10 @@ val theFileArray = File(
 fun createFileSlot(fileName: String) : File {
     println("createDemoConfigFile ${Dir1.absoluteFile}")
 
-    Dir1.mkdir()
+    if (!Dir1.exists()) {
+        Dir1.mkdir()
+    }
+
     val file = File(Dir1,fileName)
     if (!file.exists()) {
         file.createNewFile()

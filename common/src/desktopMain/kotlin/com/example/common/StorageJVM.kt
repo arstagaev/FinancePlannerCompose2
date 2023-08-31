@@ -22,7 +22,7 @@ actual suspend fun saveNewBudgetJSON() {
     //val jsonConfig = Json.encodeToString<SaldoConfiguration>(configurationOfSaldo.value)
 
     println(">>>> ${json}")
-    writeToFile(json, File(Dir1, currentJSONObjectName.fileName))
+    writeToFile(json, File(Dir1, currentJSONObjectName.fileName+".json"))
     //writeToFile(jsonConfig, File(Dir1,"config.json"))
 }
 
@@ -37,7 +37,7 @@ actual suspend fun refreshBudgetJSON() {
 actual suspend fun decodeFromFile() {
     var json = ""
     try {
-        BufferedReader(FileReader(File(Dir1, currentJSONObjectName.fileName))).use { br ->
+        BufferedReader(FileReader(File(Dir1, currentJSONObjectName.fileName+".json"))).use { br ->
             var line: String?
             while (br.readLine().also { line = it } != null) {
                 json += line
@@ -62,19 +62,6 @@ actual suspend fun decodeFromFile() {
 //    }
     //println("<>> ${jsonConfig}")
 
-//    if (jsonConfig.isNotEmpty()) {
-//        val decodedConfig = Json.decodeFromString<SaldoConfiguration>(jsonConfig)
-//        configurationOfSaldo.value =  configurationOfSaldo.value.copy(
-//            investmentsAmount = decodedConfig.investmentsAmount,
-//            investmentsName = decodedConfig.investmentsName,
-//            startedDateMonth = decodedConfig.startedDateMonth,
-//            startedDateYear = decodedConfig.startedDateYear
-//        )
-//
-//    }else {
-//        //encodeForSave()
-//    }
-
     if (json.isNotEmpty()) {
         val container = Json.decodeFromString<SaveContainer>(json)
         stateFall = container.data
@@ -96,9 +83,9 @@ actual suspend fun getListOfBudgets(): ArrayList<String> {
 }
 
 actual fun createFiveSlots() {
-    createFileSlot(ListOfSlots.FIRST().fileName)
-    createFileSlot(ListOfSlots.SECOND().fileName)
-    createFileSlot(ListOfSlots.THIRD().fileName)
-    createFileSlot(ListOfSlots.FOURTH().fileName)
-    createFileSlot(ListOfSlots.FIFTH().fileName)
+    createFileSlot(ListOfSlots.FIRST().fileName+".json")
+    createFileSlot(ListOfSlots.SECOND().fileName+".json")
+    createFileSlot(ListOfSlots.THIRD().fileName+".json")
+    createFileSlot(ListOfSlots.FOURTH().fileName+".json")
+    createFileSlot(ListOfSlots.FIFTH().fileName+".json")
 }

@@ -30,10 +30,30 @@ object PreferenceStorage {
         editor.apply()
     }
 
-    var saveContainer: String
-        get() = preferences.getString("saveContainer","").toString()
+    var saveContainer1: String
+        get() = preferences.getString("saveContainer1","").toString()
         set(value) = preferences.edit {
-            it.putString("saveContainer", value)
+            it.putString("saveContainer1", value)
+        }
+    var saveContainer2: String
+        get() = preferences.getString("saveContainer2","").toString()
+        set(value) = preferences.edit {
+            it.putString("saveContainer2", value)
+        }
+    var saveContainer3: String
+        get() = preferences.getString("saveContainer3","").toString()
+        set(value) = preferences.edit {
+            it.putString("saveContainer3", value)
+        }
+    var saveContainer4: String
+        get() = preferences.getString("saveContainer4","").toString()
+        set(value) = preferences.edit {
+            it.putString("saveContainer4", value)
+        }
+    var saveContainer5: String
+        get() = preferences.getString("saveContainer5","").toString()
+        set(value) = preferences.edit {
+            it.putString("saveContainer5", value)
         }
 
     var saveConfig: String

@@ -436,7 +436,11 @@ fun BudgetScreen() {
                 if (isAtStart) {
                     Card(modifier = Modifier.size(60.dp).padding(10.dp), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
                         Box(modifier = Modifier.fillMaxSize().clickable {
+                            isEditMode.value = false
                             showBudget.value = false
+                            showTips.value = false
+//                            isEditMode.value = false
+//                            showTips.value = false
                         }) {
                             Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.ArrowBack, contentDescription = "Settings")
                         }
@@ -492,14 +496,13 @@ fun BudgetScreen() {
 }
 
 fun actionToSaveChanges() {
-
     CoroutineScope(CoroutineName("Action to save")).launch {
         isEditMode.value = false
         //updateWhole()
         saveNewBudgetJSON()
     }
-
 }
+
 private fun tester1() {
     GlobalScope.launch {
         repeat(100) {
