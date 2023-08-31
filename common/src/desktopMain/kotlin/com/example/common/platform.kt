@@ -1,5 +1,7 @@
 package com.example.common
 
-actual fun getPlatformName(): String {
-    return "Desktop"
+import com.example.common.utils.Platform
+
+actual fun getPlatformName(): Platform {
+    return Platform.DESKTOP
 }

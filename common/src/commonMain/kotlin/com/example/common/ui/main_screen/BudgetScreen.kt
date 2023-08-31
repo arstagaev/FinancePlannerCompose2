@@ -432,35 +432,34 @@ fun BudgetScreen() {
                 }
             }
 
-            Row(modifier = Modifier, horizontalArrangement = Arrangement.SpaceBetween) {
-                if (isAtStart) {
-                    Card(modifier = Modifier.size(60.dp).padding(10.dp), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
-                        Box(modifier = Modifier.fillMaxSize().clickable {
-                            isEditMode.value = false
-                            showBudget.value = false
-                            showTips.value = false
-//                            isEditMode.value = false
-//                            showTips.value = false
-                        }) {
-                            Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.ArrowBack, contentDescription = "Settings")
-                        }
+            Card(modifier = Modifier.size(60.dp).padding(10.dp), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
+                Box(modifier = Modifier.fillMaxSize().clickable {
+                    if (saldoMode.value == SaldoMode.SHOW) {
+                        saldoMode.value = SaldoMode.SETUP_SETTINGS
+                    } else {
+                        updateWhole()
+                        saldoMode.value = SaldoMode.SHOW
                     }
+                }) {
+                    Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.Settings, contentDescription = "Settings")
                 }
+            }
 
-
+            if (isAtStart) {
                 Card(modifier = Modifier.size(60.dp).padding(10.dp), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
                     Box(modifier = Modifier.fillMaxSize().clickable {
-                        if (saldoMode.value == SaldoMode.SHOW) {
-                            saldoMode.value = SaldoMode.SETUP_SETTINGS
-                        } else {
-                            updateWhole()
-                            saldoMode.value = SaldoMode.SHOW
-                        }
+                        isEditMode.value = false
+                        showBudget.value = false
+                        showTips.value = false
+//                            isEditMode.value = false
+//                            showTips.value = false
                     }) {
-                        Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.Settings, contentDescription = "Settings")
+                        Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.ArrowBack, contentDescription = "Settings")
                     }
                 }
             }
+
+//            Row(modifier = Modifier, horizontalArrangement = Arrangement.SpaceBetween) {}
         }
 
 

@@ -1,6 +1,8 @@
 package com.example.common
 
-expect fun getPlatformName(): String
+import com.example.common.utils.Platform
+
+expect fun getPlatformName(): Platform
 
 expect fun createFiveSlots()
 
