@@ -5,8 +5,7 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.MaterialTheme
 import com.example.common.ui.main_screen.BudgetScreen
-import com.example.common.storage.encodeForSave
-import com.example.common.ui.main_screen.initital
+import com.example.common.ui.starter_screen.StarterScreen
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
@@ -16,20 +15,21 @@ class MainActivity : AppCompatActivity() {
     var crt = CoroutineScope(CoroutineName("Activity"))
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        initital()
+
         setContent {
             MaterialTheme {
                 //App()
-                BudgetScreen()
+                //BudgetScreen()
+                StarterScreen()
             }
         }
     }
 
     override fun onPause() {
         super.onPause()
-        crt.launch {
-            encodeForSave()
-        }
+//        crt.launch {
+//            encodeForSave()
+//        }
 
     }
 

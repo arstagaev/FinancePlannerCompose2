@@ -107,7 +107,7 @@ fun updateWhole() {
     val crtScp = CoroutineScope(CoroutineName("Update"))
     //saldoMode.value = SaldoMode.LOADING
     resultArray.clear()
-
+    futureFall.value = null
     // make result
     var lastSum = configurationOfSaldo.value.investmentsAmount//-1000//investments
 

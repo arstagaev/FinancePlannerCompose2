@@ -75,7 +75,7 @@ actual suspend fun decodeFromFile() {
     } else {
        //encodeForSave()
     }
-    println("Encode successfully config: ~ stateFall:${stateFall.size}")
+    println("Encode ~ stateFall size:${stateFall.size}")
 }
 
 actual suspend fun getListOfBudgets(): ArrayList<String> {
