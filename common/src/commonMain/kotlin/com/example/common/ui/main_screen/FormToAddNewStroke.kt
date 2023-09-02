@@ -52,7 +52,7 @@ internal fun plusik(isIncome: Boolean = true, parentIndex: Int) {
                 println("Prep1 ${newValue} ${checkedState.value}")
 
                 //addNewCell(SaldoCell(amount = newValue * if(isIncome) 1 else -1), parentIndex)
-                addNewCell(newCellSaldo.value.copy(amount = newValue * if (isIncome) 1 else -1, isConst = checkedState.value, name = saldoStrokeName.value), parentIndex)
+                addNewCell(newCellSaldo.value.copy(amount = newValue * if (isIncome) 1 else -1, isConst = checkedState.value, name = saldoStrokeName.value), parentIndex = parentIndex, isIncome = isIncome)
 
                 newCellSaldo.value.amount = 0
                 isEdit.value = false

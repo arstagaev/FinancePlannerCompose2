@@ -44,6 +44,7 @@ fun forecastGhostMonth(
     var saldoModeInternal = remember { saldoMode }
 
     LaunchedEffect(futureSaldo.value) {
+        println("forecastGhostMonth ${futureSaldo.value.toString()}")
         var dateCustom = futureSaldo.value?.startForecastDate?.plus(DatePeriod(months = index))
         dt.value = "${dateCustom?.year} ${dateCustom?.month}"
     }

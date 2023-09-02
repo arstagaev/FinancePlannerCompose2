@@ -47,7 +47,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome: Boolean = true) {
-    if (if (stateFall.size > parentIndex) !stateFall[parentIndex].contains(saldoCell) else return) return
+    //if (if (stateFall.size > parentIndex) !stateFall[parentIndex].contains(saldoCell) else return) return
 
     val oldvalue = saldoCell.amount
     var isEditLocal = remember { mutableStateOf(false) }
@@ -63,7 +63,7 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
 
         if (!isEditMode.value && saldoStrokeAmount.value.toString().isNotEmpty() && saldoStrokeAmount.value.toString().isNotBlank()) {
             if (isEditLocal.value) {
-                updateStroke(oldSaldo = saldoCell, newSaldoCell = SaldoCell(amount = saldoStrokeAmount.value.text.toInt(), name = saldoStrokeName.value, saldoCell.isConst), parentIndex,)
+                updateStroke(oldSaldo = saldoCell, newSaldoCell = SaldoCell(amount = saldoStrokeAmount.value.text.toInt(), name = saldoStrokeName.value, saldoCell.isConst), parentIndex = parentIndex, isIncome = isIncome)
                 actionToSaveChanges()
                 isEditLocal.value = false
 
@@ -171,7 +171,7 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     Row(Modifier.clickable {
-                        deleteCell(monthIndex = parentIndex, saldoCell = saldoCell)
+                        deleteCell(monthIndex = parentIndex, saldoCell = saldoCell, isIncome = isIncome)
                         isEditMode.value = false
                         //isEdit.value = false
 
@@ -179,7 +179,7 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                         Text("❌", fontSize = 20.sp)
                     }
                     Row(Modifier.clickable {
-                        deleteCell(monthIndex = parentIndex, saldoCell = saldoCell, true)
+                        deleteCell(monthIndex = parentIndex, saldoCell = saldoCell, isIncome = isIncome, andFuture = true)
                         //isEdit.value = false
                         isEditMode.value = false
                     }) {

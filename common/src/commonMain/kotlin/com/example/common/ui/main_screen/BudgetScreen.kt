@@ -31,6 +31,7 @@ import com.example.common.decodeFromFile
 import com.example.common.saveNewBudgetJSON
 import com.example.common.enums.SaldoMode
 import com.example.common.models.FutureSaldo
+import com.example.common.models.MonthSaldo
 import com.example.common.models.ResultSaldo
 import com.example.common.models.SaldoCell
 import com.example.common.models.SaldoConfiguration
@@ -77,14 +78,14 @@ private var startDate = LocalDate(
 )//LocalDateTime.of(2023,1,1)
 
 var ShowWithDescription = true
-var stateFall = arrayListOf<ArrayList<SaldoCell>>(
+var stateFall = arrayListOf<MonthSaldo>(
 //    arrayListOf(SaldoCell(amount = 1), SaldoCell(amount = 1), SaldoCell(1), SaldoCell(1)),
 //    arrayListOf(SaldoCell(amount = 1), SaldoCell(amount = 1), SaldoCell(1), SaldoCell(-1)),
 //    arrayListOf(SaldoCell(amount = 12), SaldoCell(amount = 1), SaldoCell(1, isConst = true), SaldoCell(111))
 )
 
 
-private val waterFall = MutableSharedFlow<ArrayList<ArrayList<SaldoCell>>>()
+private val waterFall = MutableSharedFlow<ArrayList<MonthSaldo>>()
 internal val resultFall = MutableSharedFlow<ArrayList<ResultSaldo>>()
 val futureFall = mutableStateOf<FutureSaldo?>(null)
 val paybackPeriod = mutableStateOf<String>("2+ years")
@@ -127,31 +128,47 @@ fun updateWhole() {
     println("> stateFall ${stateFall.joinToString()}")
 
 
-    // in initial launch of app , when empty
+    /**
+        in initial launch of app , when empty
+    */
+
     if (stateFall.isEmpty()) {
         saldoMode.value = SaldoMode.SHOW
+
         resultArray.add(
             ResultSaldo(LocalDate(year = LocalDateTime.now().year,LocalDateTime.now().month,LocalDateTime.now().dayOfMonth),0,0,0)
         )
         configurationOfSaldo.value = configurationOfSaldo.value.copy(startedDateYear = LocalDateTime.now().year, startedDateMonth = LocalDateTime.now().monthValue)
         crtScp.launch {
+
             resultFall.emit(resultArray)
+            futureFall.value = FutureSaldo(
+                income = incConst, expense = expConst,
+                startForecastDate = startDate,
+                sum1 = 0,
+                sum2 = 0,
+                sum3 = 0,
+                incomes = futureIncome, expenses = futureExpense,
+                periodHalfYear = 0,
+                periodFirstYear = 0,
+                periodSecondYear = 0
+            )
         }
         return
     }
     var alreadyPayback = false
     stateFall.forEachIndexed { index, month ->
         //stateFall[index] = month.sortedBy { it.amount } as ArrayList<SaldoCell>
-        stateFall[index] = ArrayList( month.sortedBy { it.amount })
+        //stateFall[index] = ArrayList( month.sortedBy { it.amount })
 
-        var incList = ArrayList(month.filter { it != null && it.amount > 0  })
-        var expList = ArrayList(month.filter { it != null && it.amount < 0  })
+//        var incList = ArrayList(month.filter { it != null && it.amount > 0  })
+//        var expList = ArrayList(month.filter { it != null && it.amount < 0  })
 
-        var income = incList.sumOf { it.amount }
-        var expense = expList.sumOf { it.amount }
+        var income = month.incomes.sumOf { it.amount }
+        var expense = month.expenses.sumOf { it.amount }
 
         lastSum = income + expense + lastSum
-        println("<stateFall.forEachIndexed>>>> lastSum:${lastSum}  income:${income} expense:${expense}  investmentsAmount VM:${configurationOfSaldo.value.investmentsAmount} || ${month.joinToString { it.amount.toString() }}")
+        println("<stateFall.forEachIndexed>>>> lastSum:${lastSum}  income:${income} expense:${expense}  investmentsAmount VM:${configurationOfSaldo.value.investmentsAmount} || ${month.toString()}")
         dt = startDate.plus(DatePeriod(months = index))
         resultArray.add(ResultSaldo(date = dt, income = income, sum = lastSum, expense = expense))
 
@@ -162,8 +179,8 @@ fun updateWhole() {
 
         // future generate
         if (index == stateFall.size-1) {
-            futureIncome = incList.filter { it.isConst }.map { it.amount }
-            futureExpense = expList.filter { it.isConst }.map { it.amount }
+            futureIncome = month.incomes.filter { it.isConst }.map { it.amount }
+            futureExpense = month.expenses.filter { it.isConst }.map { it.amount }
 
             incConst = futureIncome.sum()
             expConst = futureExpense.sum()
@@ -212,6 +229,8 @@ fun updateWhole() {
     )
 
     crtScp.async {
+        futureFall.value = forecast
+
         resultFall.emit(arrayListOf())
         resultFall.emit(resultArray)
 
@@ -219,7 +238,7 @@ fun updateWhole() {
         waterFall.emit(stateFall)
 
         //futureFall.emit(null)
-        futureFall.value = forecast
+
         println("===========================>")
         println("~refresh stateFall-> ${stateFall.joinToString()}")
         println("~refresh resultArray-> ${resultArray.joinToString()}")
@@ -231,43 +250,69 @@ fun updateWhole() {
 
 }
 
-internal fun updateStroke(oldSaldo: SaldoCell, newSaldoCell: SaldoCell, parentIndex: Int) {
+internal fun updateStroke(oldSaldo: SaldoCell, newSaldoCell: SaldoCell, parentIndex: Int, isIncome: Boolean) {
     if (newSaldoCell.amount == null) return
+    if (isIncome) {
+        stateFall[parentIndex].incomes.forEachIndexed { index, i ->
 
-    stateFall[parentIndex].forEachIndexed { index, i ->
-
-        if (i == oldSaldo) {
-            stateFall[parentIndex][index] = newSaldoCell
-            println("updateStroke:> ${stateFall[parentIndex].map { it.amount }.joinToString()}")
-            updateWhole()
-            return
+            if (i == oldSaldo) {
+                stateFall[parentIndex].incomes[index] = newSaldoCell
+                println("updateStroke:> ${stateFall[parentIndex].incomes.map { it.amount }.joinToString()}")
+                updateWhole()
+                return
+            }
         }
+        stateFall[parentIndex].incomes.sortedBy { it.amount }
+    } else {
+        stateFall[parentIndex].expenses.forEachIndexed { index, i ->
+
+            if (i == oldSaldo) {
+                stateFall[parentIndex].expenses[index] = newSaldoCell
+                println("updateStroke:> ${stateFall[parentIndex].expenses.map { it.amount }.joinToString()}")
+                updateWhole()
+                return
+            }
+        }
+        stateFall[parentIndex].expenses.sortedBy { it.amount }
     }
-    stateFall[parentIndex].sortedBy { it.amount }
+
 }
 
 private fun addNewSaldo() {
     if (stateFall.isEmpty()) {
         return
     }
-    var toFuture = stateFall.last().filter { it.isConst }
 
-    stateFall.add(toFuture as ArrayList<SaldoCell>)
+    var toFuture = stateFall.last().copy(
+        incomes = ArrayList(stateFall.last().incomes.filter { it.isConst }),
+        expenses = ArrayList(stateFall.last().expenses.filter { it.isConst })
+    )//.filter { it.isConst }
+
+    stateFall.add(toFuture)
 
     updateWhole()
 }
 
-internal fun addNewCell(newValue: SaldoCell?, parentIndex: Int) {
+internal fun addNewCell(newValue: SaldoCell?, parentIndex: Int, isIncome: Boolean) {
     if (newValue == null) return
 
     if (parentIndex >= stateFall.size) {
         var newArrayList = arrayListOf<SaldoCell>(newValue)
 
+        stateFall.add(MonthSaldo(
+            incomes = if (isIncome) newArrayList else arrayListOf(),
+            expenses = if (isIncome) arrayListOf() else newArrayList
+        ))
 
-        stateFall.add(newArrayList)
     } else {
-        stateFall[parentIndex].add(newValue)
-        stateFall[parentIndex].sortedBy { it.amount }
+        if (isIncome) {
+            stateFall[parentIndex].incomes.add(newValue)
+            stateFall[parentIndex].incomes.sortedBy { it.amount }
+        } else {
+            stateFall[parentIndex].expenses.add(newValue)
+            stateFall[parentIndex].expenses.sortedBy { it.amount }
+        }
+
 
         if (newValue.isConst) {
             var afterMatchCurrentMonth = false
@@ -279,7 +324,12 @@ internal fun addNewCell(newValue: SaldoCell?, parentIndex: Int) {
                 }
                 if (index != parentIndex && afterMatchCurrentMonth) {
 
-                    stateFall[index].add(newValue)
+                    if (isIncome) {
+                        stateFall[index].incomes.add(newValue)
+                    }else {
+                        stateFall[index].expenses.add(newValue)
+                    }
+
                 }
             }
         }
@@ -288,20 +338,32 @@ internal fun addNewCell(newValue: SaldoCell?, parentIndex: Int) {
     updateWhole()
 }
 // TODO need check:
-internal fun deleteCell(monthIndex: Int, saldoCell: SaldoCell, andFuture: Boolean = false) {
+internal fun deleteCell(monthIndex: Int, saldoCell: SaldoCell, andFuture: Boolean = false, isIncome: Boolean) {
     if (monthIndex < stateFall.size) {
         //stateFall[monthIndex] = ArrayList(stateFall[monthIndex].minus(element = value))
-        val indexRemovedElement = stateFall[monthIndex].indexOf(saldoCell)
-        stateFall[monthIndex].removeAt(indexRemovedElement)
+        if (isIncome) {
+            val indexRemovedElement = stateFall[monthIndex].incomes.indexOf(saldoCell)
+            stateFall[monthIndex].incomes.removeAt(indexRemovedElement)
+        } else {
+            val indexRemovedElement = stateFall[monthIndex].expenses.indexOf(saldoCell)
+            stateFall[monthIndex].expenses.removeAt(indexRemovedElement)
+        }
+
 
         if (andFuture) {
             stateFall.forEachIndexed { index, saldoCells ->
                 if (index >= monthIndex && stateFall.size > index) {
-                    val ire = stateFall[index].indexOf(saldoCell)
-                    println(">>> ${ire} ${saldoCells.joinToString()}")
-                    if (ire >= 0) {
-                        stateFall[index].removeAt(ire)
+
+                    if (isIncome) {
+                        val ire = stateFall[index].incomes.indexOf(saldoCell)
+                        println(">>> ${ire} ${saldoCells.incomes.joinToString()}")
+                        if (ire >= 0) { stateFall[index].incomes.removeAt(ire) }
+                    } else {
+                        val ire = stateFall[index].expenses.indexOf(saldoCell)
+                        println(">>> ${ire} ${saldoCells.expenses.joinToString()}")
+                        if (ire >= 0) { stateFall[index].expenses.removeAt(ire) }
                     }
+
                 }
             }
         }
@@ -383,7 +445,12 @@ fun BudgetScreen() {
                     }
                 } else {
                     item {
-                        PlateOfMonth(0, arrayListOf<SaldoCell>())
+                        PlateOfMonth(0,
+                            MonthSaldo(
+                                incomes = arrayListOf(),
+                                expenses = arrayListOf()
+                            )
+                        )
                     }
                 }
 
@@ -451,6 +518,12 @@ fun BudgetScreen() {
                         isEditMode.value = false
                         showBudget.value = false
                         showTips.value = false
+                        configurationOfSaldo.value = SaldoConfiguration(
+                            investmentsAmount = 0,
+                            investmentsName = "input here description",
+                            startedDateMonth = 2,
+                            startedDateYear = 1997
+                        )
 //                            isEditMode.value = false
 //                            showTips.value = false
                     }) {
@@ -503,15 +576,15 @@ fun actionToSaveChanges() {
 }
 
 private fun tester1() {
-    GlobalScope.launch {
-        repeat(100) {
-            stateFall = arrayListOf(
-                arrayListOf(SaldoCell(1), SaldoCell(amount = (-10..20).random())),
-                arrayListOf(SaldoCell(1), SaldoCell(amount = (-20..30).random())),
-                arrayListOf(SaldoCell(1), SaldoCell(amount = (-30..40).random())),
-            )
-            updateWhole()
-            delay(10)
-        }
-    }
+//    GlobalScope.launch {
+//        repeat(100) {
+//            stateFall = arrayListOf(
+//                arrayListOf(SaldoCell(1), SaldoCell(amount = (-10..20).random())),
+//                arrayListOf(SaldoCell(1), SaldoCell(amount = (-20..30).random())),
+//                arrayListOf(SaldoCell(1), SaldoCell(amount = (-30..40).random())),
+//            )
+//            updateWhole()
+//            delay(10)
+//        }
+//    }
 }

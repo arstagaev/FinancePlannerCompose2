@@ -13,23 +13,15 @@ fun String.toIntSafe() =
 
 fun String.currency() : String {
     if (this.filter { it.isDigit() }.isNotEmpty()) {
-        val formatter: NumberFormat = NumberFormat.getCurrencyInstance(Locale.US).also {
-            it.maximumFractionDigits = 0
-        }
-
-        //val myNumber = 1000000.0
-//        val df = NumberFormat.getInstance(Locale.CHINA)
-//        return df.format(this.filter { it.isDigit() }.toDouble())
-
+//        val formatter: NumberFormat = NumberFormat.getCurrencyInstance(Locale.US).also {
+//            it.maximumFractionDigits = 0
+//        }
         val nf = NumberFormat.getInstance(Locale("sk", "SK"))
         nf.isGroupingUsed = true
 
         return nf.format(this.toDouble()) + configurationOfSaldo.value.currentCurrency
-//        return formatter.format(
-//            this.filter { it.isDigit() }.toDouble()
-//        )    //+ "${configurationOfSaldo.value.currentCurrency}"
     } else {
-        return this
+        return "0" + configurationOfSaldo.value.currentCurrency
     }
 
 }

@@ -35,6 +35,7 @@ import com.example.common.colorCard
 import com.example.common.colorTextSumMonth
 import com.example.common.enums.SaldoMode
 import com.example.common.fontTitleMonth
+import com.example.common.models.MonthSaldo
 import com.example.common.models.SaldoCell
 import com.example.common.utils.currency
 import kotlinx.coroutines.GlobalScope
@@ -43,7 +44,7 @@ import java.util.ArrayList
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun PlateOfMonth(parentIndex: Int, parentItem: ArrayList<SaldoCell>) {
+fun PlateOfMonth(parentIndex: Int, parentItem: MonthSaldo) {
     val res = resultFall.collectAsState(resultArray)
     var saldoModeInternal = remember { saldoMode }
     val dt = if (res.value.size > parentIndex) res.value[parentIndex].date else null
@@ -89,7 +90,7 @@ fun PlateOfMonth(parentIndex: Int, parentItem: ArrayList<SaldoCell>) {
                     Spacer(Modifier.fillMaxWidth().height(3.dp))
                     LazyColumn {
                         itemsIndexed(
-                            parentItem.filter { it.amount > 0 }.sortedByDescending { it.amount }
+                            parentItem.incomes.sortedByDescending { it.amount }
                             ,
                             itemContent = { index, item ->
                                 strokeAgregator(item, parentIndex, index)
@@ -171,7 +172,8 @@ fun PlateOfMonth(parentIndex: Int, parentItem: ArrayList<SaldoCell>) {
                 ) {
                     Spacer(Modifier.fillMaxWidth().height(3.dp))
                     LazyColumn {
-                        itemsIndexed(parentItem.filter { it.amount < 0 }.sortedByDescending { it.amount }
+                        itemsIndexed(
+                            parentItem.expenses.sortedByDescending { it.amount }
                             , itemContent = { index, itemStroke ->
                             //Text(">${item}")
                             strokeAgregator(itemStroke, parentIndex, index, isIncome = false)
