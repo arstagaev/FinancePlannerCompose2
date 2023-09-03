@@ -4,12 +4,10 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.MaterialTheme
-import com.example.common.ui.main_screen.BudgetScreen
 import com.example.common.ui.starter_screen.StarterScreen
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     var crt = CoroutineScope(CoroutineName("Activity"))

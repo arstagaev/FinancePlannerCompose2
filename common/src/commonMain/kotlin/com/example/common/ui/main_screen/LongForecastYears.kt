@@ -17,7 +17,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.common.enums.SaldoMode
-import com.example.common.ui.main_screen.futureFall
+import com.example.common.ui.main_dashboard.futureFall
+import com.example.common.ui.main_dashboard.saldoMode
 
 @Composable
 fun longForecast() {

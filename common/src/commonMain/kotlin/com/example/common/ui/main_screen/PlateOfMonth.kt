@@ -36,11 +36,18 @@ import com.example.common.colorTextSumMonth
 import com.example.common.enums.SaldoMode
 import com.example.common.fontTitleMonth
 import com.example.common.models.MonthSaldo
-import com.example.common.models.SaldoCell
+import com.example.common.ui.main_dashboard.colorCreditResult
+import com.example.common.ui.main_dashboard.colorDebitResult
+import com.example.common.ui.main_dashboard.colorTextCreditTitle
+import com.example.common.ui.main_dashboard.colorTextDebitTitle
+import com.example.common.ui.main_dashboard.resultArray
+import com.example.common.ui.main_dashboard.resultFall
+import com.example.common.ui.main_dashboard.saldoMode
+import com.example.common.ui.main_dashboard.showTips
+import com.example.common.ui.main_dashboard.updateWhole
 import com.example.common.utils.currency
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
-import java.util.ArrayList
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

@@ -3,14 +3,12 @@ package com.example.common.ui.main_screen
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
-import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -25,12 +23,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.common.colorCard
 import com.example.common.colorText
-import com.example.common.colorTextSecondary
 import com.example.common.colorTextSumMonth
 import com.example.common.enums.SaldoMode
+import com.example.common.ui.main_dashboard.colorCreditResult
+import com.example.common.ui.main_dashboard.colorCreditStroke
+import com.example.common.ui.main_dashboard.colorDebitResult
+import com.example.common.ui.main_dashboard.colorDebitStroke
+import com.example.common.ui.main_dashboard.futureFall
+import com.example.common.ui.main_dashboard.saldoMode
 import com.example.common.utils.currency
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
 

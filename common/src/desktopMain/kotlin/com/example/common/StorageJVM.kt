@@ -3,13 +3,11 @@ package com.example.common
 import com.example.common.models.SaveContainer
 import com.example.common.storage.Dir1
 import com.example.common.storage.createFileSlot
-import com.example.common.storage.theFileArray
 import com.example.common.storage.writeToFile
-import com.example.common.ui.main_screen.configurationOfSaldo
-import com.example.common.ui.main_screen.stateFall
+import com.example.common.ui.main_dashboard.configurationOfSaldo
+import com.example.common.ui.main_dashboard.stateFall
 import com.example.common.utils.ListOfSlots
 import com.example.common.utils.StateMachine.currentJSONObjectName
-import com.example.common.utils.generateJsonFile
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.BufferedReader

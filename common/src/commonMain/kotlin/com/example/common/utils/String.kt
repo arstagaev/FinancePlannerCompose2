@@ -1,6 +1,6 @@
 package com.example.common.utils
 
-import com.example.common.ui.main_screen.configurationOfSaldo
+import com.example.common.ui.main_dashboard.configurationOfSaldo
 import java.text.NumberFormat
 import java.util.Locale
 

@@ -46,6 +46,9 @@ import com.example.common.colorTextSecondary
 import com.example.common.custom.DateSelectionSection
 import com.example.common.custom.defineNumMonth
 import com.example.common.enums.SaldoMode
+import com.example.common.ui.main_dashboard.configurationOfSaldo
+import com.example.common.ui.main_dashboard.saldoMode
+import com.example.common.ui.main_dashboard.updateWhole
 import com.example.common.utils.toIntSafe
 
 @Composable

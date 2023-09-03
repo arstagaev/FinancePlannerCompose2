@@ -1,4 +1,4 @@
-package com.example.common.ui.list_saldos_screen
+package com.example.common.ui.premium_adv
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,12 +23,12 @@ import com.example.common.colorCard
 import com.example.common.colorGrayWindow2
 import com.example.common.colorTextSumMonth
 import com.example.common.createFiveSlots
-import com.example.common.ui.starter_screen.showBudget
+import com.example.common.ui.premium_adv.IPremiumAdvComponent
 import com.example.common.utils.ListOfSlots
 import com.example.common.utils.StateMachine.currentJSONObjectName
 
 @Composable
-fun ListOfBudgets() {
+fun ListOfBudgets(component: IPremiumAdvComponent) {
     val listOfBudgets = mutableStateListOf<ListOfSlots>(
         ListOfSlots.FIRST(),
         ListOfSlots.SECOND(),
@@ -60,7 +60,7 @@ fun ListOfBudgets() {
                         Modifier.fillMaxSize()//.width(100.dp)
                             .background(colorCard).clickable {
                                 currentJSONObjectName = item
-                                showBudget.value = true
+                                component.showSelectedBudget()
                             }
                     ) {
                         Text(modifier = Modifier.fillMaxWidth().padding(start =10.dp ), text = item.fileName, color = colorTextSumMonth, fontSize = 30.sp)

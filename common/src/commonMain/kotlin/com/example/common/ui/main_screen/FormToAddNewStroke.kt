@@ -33,6 +33,9 @@ import androidx.compose.ui.unit.sp
 import com.example.common.colorText
 import com.example.common.colorTextSecondary
 import com.example.common.models.SaldoCell
+import com.example.common.ui.main_dashboard.actionToSaveChanges
+import com.example.common.ui.main_dashboard.addNewCell
+import com.example.common.ui.main_dashboard.isEditMode
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -101,9 +104,9 @@ internal fun plusik(isIncome: Boolean = true, parentIndex: Int) {
                     keyboardActions = KeyboardActions(
                         onDone = { actionToSaveChanges() },
                         onSearch = { actionToSaveChanges() },
-                        onGo = {actionToSaveChanges()},
-                        onNext = {actionToSaveChanges()},
-                        onSend = {actionToSaveChanges()}
+                        onGo = { actionToSaveChanges() },
+                        onNext = { actionToSaveChanges() },
+                        onSend = { actionToSaveChanges() }
                     )
                 )
                 TextField(
@@ -133,9 +136,9 @@ internal fun plusik(isIncome: Boolean = true, parentIndex: Int) {
                     keyboardActions = KeyboardActions(
                         onDone = { actionToSaveChanges() },
                         onSearch = { actionToSaveChanges() },
-                        onGo = {actionToSaveChanges()},
-                        onNext = {actionToSaveChanges()},
-                        onSend = {actionToSaveChanges()}
+                        onGo = { actionToSaveChanges() },
+                        onNext = { actionToSaveChanges() },
+                        onSend = { actionToSaveChanges() }
                     )
                 )
                 Spacer(Modifier.fillMaxWidth().height(3.dp))

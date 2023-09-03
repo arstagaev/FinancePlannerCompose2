@@ -22,8 +22,11 @@ kotlin {
                 implementation(project(":common"))
                 implementation(compose.desktop.currentOs)
                 api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
-//                implementation(main)
-//                implementation(ext)
+
+                val decompose = "2.0.0"
+                implementation("com.arkivanov.decompose:decompose:${decompose}")
+                implementation("com.arkivanov.decompose:extensions-compose-jetbrains:${decompose}")
+
             }
         }
         val jvmTest by getting

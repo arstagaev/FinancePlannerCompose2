@@ -1,8 +1,8 @@
 package com.example.common
 
 import com.example.common.models.SaveContainer
-import com.example.common.ui.main_screen.configurationOfSaldo
-import com.example.common.ui.main_screen.stateFall
+import com.example.common.ui.main_dashboard.configurationOfSaldo
+import com.example.common.ui.main_dashboard.stateFall
 import com.example.common.utils.StateMachine
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json

@@ -1,4 +1,4 @@
-package com.example.common.ui.main_screen
+package com.example.common.ui.main_dashboard
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -17,8 +17,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -26,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.common.colorGrayWindow2
 import com.example.common.colorText
-import com.example.common.colorTextSumMonth
 import com.example.common.decodeFromFile
 import com.example.common.saveNewBudgetJSON
 import com.example.common.enums.SaldoMode
@@ -35,13 +32,15 @@ import com.example.common.models.MonthSaldo
 import com.example.common.models.ResultSaldo
 import com.example.common.models.SaldoCell
 import com.example.common.models.SaldoConfiguration
-import com.example.common.ui.starter_screen.showBudget
-import com.example.common.utils.StateMachine
+import com.example.common.ui.main_screen.EditorOfDate
+import com.example.common.ui.main_screen.InitialInvestments
+import com.example.common.ui.main_screen.PlateOfMonth
+import com.example.common.ui.main_screen.forecastGhostMonth
+import com.example.common.ui.main_screen.longForecast
+import com.example.common.ui.main_screen.shimmerEffectBlue
 import com.example.common.utils.generatePaybackPeriod
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
@@ -216,7 +215,7 @@ fun updateWhole() {
 
     }
 
-    var forecast = FutureSaldo(
+    val forecast = FutureSaldo(
         income = incConst, expense = expConst,
         startForecastDate = dt,
         sum1 = sum1,
@@ -228,8 +227,8 @@ fun updateWhole() {
         periodSecondYear = sumSecondYear
     )
 
-    crtScp.async {
-        futureFall.value = forecast
+    crtScp.launch {
+        println("===========================>")
 
         resultFall.emit(arrayListOf())
         resultFall.emit(resultArray)
@@ -239,13 +238,16 @@ fun updateWhole() {
 
         //futureFall.emit(null)
 
-        println("===========================>")
+        futureFall.value = forecast
+
+
         println("~refresh stateFall-> ${stateFall.joinToString()}")
         println("~refresh resultArray-> ${resultArray.joinToString()}")
         println("~refresh forecast-> ${forecast.toString()}")
-        println("<===========================")
+
         saldoMode.value = SaldoMode.SHOW
         saveNewBudgetJSON()
+        println("<===========================")
     }
 
 }
@@ -377,7 +379,8 @@ internal fun deleteCell(monthIndex: Int, saldoCell: SaldoCell, andFuture: Boolea
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
-fun BudgetScreen() {
+fun BudgetScreen(component: MainDashboardComponent) {
+
     val crtcxt = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
     val isAtStart by remember {
@@ -394,7 +397,7 @@ fun BudgetScreen() {
 //            }
         }
     }
-    LaunchedEffect(showBudget.value) {
+    LaunchedEffect(Unit) {
         saldoMode.value = SaldoMode.LOADING
         decodeFromFile()
         delay(1000L)
@@ -515,15 +518,16 @@ fun BudgetScreen() {
             if (isAtStart) {
                 Card(modifier = Modifier.size(60.dp).padding(10.dp), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
                     Box(modifier = Modifier.fillMaxSize().clickable {
-                        isEditMode.value = false
-                        showBudget.value = false
-                        showTips.value = false
                         configurationOfSaldo.value = SaldoConfiguration(
                             investmentsAmount = 0,
                             investmentsName = "input here description",
                             startedDateMonth = 2,
                             startedDateYear = 1997
                         )
+                        isEditMode.value = false
+                        //showBudget.value = false
+                        showTips.value = false
+                        component.toBackListOfBudgets()
 //                            isEditMode.value = false
 //                            showTips.value = false
                     }) {

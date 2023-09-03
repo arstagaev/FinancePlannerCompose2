@@ -16,6 +16,7 @@ kotlin {
         jvmToolchain(11)
     }
     val serialization_version = "1.5.1"
+
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -25,6 +26,10 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
                 // Works as common dependency as well as the platform one
                 implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version")
+                val decompose = "2.0.0"
+                implementation("com.arkivanov.decompose:decompose:${decompose}")
+                implementation("com.arkivanov.decompose:extensions-compose-jetbrains:${decompose}")
+
             }
         }
         val commonTest by getting {

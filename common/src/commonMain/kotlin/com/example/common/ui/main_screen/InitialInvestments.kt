@@ -36,6 +36,12 @@ import com.example.common.colorCard
 import com.example.common.colorTextSecondary
 import com.example.common.colorTextSumMonth
 import com.example.common.enums.SaldoMode
+import com.example.common.ui.main_dashboard.actionToSaveChanges
+import com.example.common.ui.main_dashboard.configurationOfSaldo
+import com.example.common.ui.main_dashboard.isEditMode
+import com.example.common.ui.main_dashboard.saldoMode
+import com.example.common.ui.main_dashboard.showTips
+import com.example.common.ui.main_dashboard.updateWhole
 import com.example.common.utils.StateMachine
 import com.example.common.utils.currency
 
@@ -144,9 +150,9 @@ fun InitialInvestments() {
                         keyboardActions = KeyboardActions(
                             onDone = { actionToSaveChanges() },
                             onSearch = { actionToSaveChanges() },
-                            onGo = {actionToSaveChanges()},
-                            onNext = {actionToSaveChanges()},
-                            onSend = {actionToSaveChanges()}
+                            onGo = { actionToSaveChanges() },
+                            onNext = { actionToSaveChanges() },
+                            onSend = { actionToSaveChanges() }
                         )
                     )
 
@@ -173,9 +179,9 @@ fun InitialInvestments() {
                         keyboardActions = KeyboardActions(
                             onDone = { actionToSaveChanges() },
                             onSearch = { actionToSaveChanges() },
-                            onGo = {actionToSaveChanges()},
-                            onNext = {actionToSaveChanges()},
-                            onSend = {actionToSaveChanges()}
+                            onGo = { actionToSaveChanges() },
+                            onNext = { actionToSaveChanges() },
+                            onSend = { actionToSaveChanges() }
                         )
                     )
                 } else {

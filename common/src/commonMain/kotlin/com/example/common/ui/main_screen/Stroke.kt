@@ -40,6 +40,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.common.colorTextSecondary
 import com.example.common.models.SaldoCell
+import com.example.common.ui.main_dashboard.actionToSaveChanges
+import com.example.common.ui.main_dashboard.colorCreditResult
+import com.example.common.ui.main_dashboard.colorCreditStroke
+import com.example.common.ui.main_dashboard.colorDebitResult
+import com.example.common.ui.main_dashboard.colorDebitStroke
+import com.example.common.ui.main_dashboard.colorTextCreditTitle
+import com.example.common.ui.main_dashboard.colorTextDebitTitle
+import com.example.common.ui.main_dashboard.deleteCell
+import com.example.common.ui.main_dashboard.isEditMode
+import com.example.common.ui.main_dashboard.showTips
+import com.example.common.ui.main_dashboard.updateStroke
 import com.example.common.utils.currency
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -135,9 +146,9 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                     keyboardActions = KeyboardActions(
                         onDone = { actionToSaveChanges() },
                         onSearch = { actionToSaveChanges() },
-                        onGo = {actionToSaveChanges()},
-                        onNext = {actionToSaveChanges()},
-                        onSend = {actionToSaveChanges()}
+                        onGo = { actionToSaveChanges() },
+                        onNext = { actionToSaveChanges() },
+                        onSend = { actionToSaveChanges() }
                     )
                 )
                 TextField(
@@ -163,9 +174,9 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                     keyboardActions = KeyboardActions(
                         onDone = { actionToSaveChanges() },
                         onSearch = { actionToSaveChanges() },
-                        onGo = {actionToSaveChanges()},
-                        onNext = {actionToSaveChanges()},
-                        onSend = {actionToSaveChanges()}
+                        onGo = { actionToSaveChanges() },
+                        onNext = { actionToSaveChanges() },
+                        onSend = { actionToSaveChanges() }
                     )
                 )
 
