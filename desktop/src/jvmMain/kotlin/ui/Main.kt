@@ -26,9 +26,6 @@ fun main() = application {
 //        }
 
     }) {
-
-        //StarterScreen()
-
         RootContent(component = root, modifier = Modifier.fillMaxSize())
     }
 }

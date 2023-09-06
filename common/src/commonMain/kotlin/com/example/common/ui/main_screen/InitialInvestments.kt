@@ -94,7 +94,7 @@ fun InitialInvestments() {
                 .padding(5.dp)
                 .align(Alignment.Center),
             elevation = 10.dp,
-            shape = RoundedCornerShape(20.dp)
+            shape = RoundedCornerShape(10.dp)
         ) {
             if (saldoModeInternal.value == SaldoMode.SETUP_SETTINGS || saldoModeInternal.value == SaldoMode.LOADING) {
 

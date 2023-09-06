@@ -35,6 +35,7 @@ import com.example.common.colorCard
 import com.example.common.colorTextSumMonth
 import com.example.common.enums.SaldoMode
 import com.example.common.fontTitleMonth
+import com.example.common.getPlatformName
 import com.example.common.models.MonthSaldo
 import com.example.common.ui.main_dashboard.colorCreditResult
 import com.example.common.ui.main_dashboard.colorDebitResult
@@ -45,6 +46,7 @@ import com.example.common.ui.main_dashboard.resultFall
 import com.example.common.ui.main_dashboard.saldoMode
 import com.example.common.ui.main_dashboard.showTips
 import com.example.common.ui.main_dashboard.updateWhole
+import com.example.common.utils.Platform
 import com.example.common.utils.currency
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -117,7 +119,7 @@ fun PlateOfMonth(parentIndex: Int, parentItem: MonthSaldo) {
                         colorDebitResult
                     )) {
                         if (showTipsInternal.value) {
-                            Text("Cumulative sum of incomes", modifier = Modifier.shimmerEffectBlue().padding(vertical = 2.dp).basicMarquee(iterations = 10),
+                            Text("Cumulative debit", modifier = Modifier.shimmerEffectBlue().padding(vertical = 2.dp).basicMarquee(iterations = 10),
                                 fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
                                 color = Color.Black
                             )
@@ -130,7 +132,7 @@ fun PlateOfMonth(parentIndex: Int, parentItem: MonthSaldo) {
 
                     }
                     if (showTipsInternal.value) {
-                        Text("Total sum on hands, at the end of the month", modifier = Modifier.shimmerEffectBlue().padding(vertical = 2.dp).basicMarquee(iterations = 10),
+                        Text("Total sum on hands, balance", modifier = Modifier.shimmerEffectBlue().padding(vertical = 2.dp).basicMarquee(iterations = 10),
                             fontFamily = FontFamily.Default, fontSize = 20.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
                             color = Color.Black
                         )
@@ -144,7 +146,7 @@ fun PlateOfMonth(parentIndex: Int, parentItem: MonthSaldo) {
                                 }
                             },
                             fontFamily = FontFamily.Default,
-                            fontSize = 25.sp,
+                            fontSize = if (getPlatformName() == Platform.DESKTOP) 25.sp else 30.sp,
                             fontWeight = FontWeight.ExtraBold,
                             textAlign = TextAlign.Center,
                             overflow = TextOverflow.Ellipsis,
@@ -155,7 +157,7 @@ fun PlateOfMonth(parentIndex: Int, parentItem: MonthSaldo) {
                         colorCreditResult
                     )) {
                         if (showTipsInternal.value) {
-                            Text("Cumulative sum of expenses", modifier = Modifier.shimmerEffectBlue().padding(vertical = 2.dp).basicMarquee(iterations = 10),
+                            Text("Cumulative credit", modifier = Modifier.shimmerEffectBlue().padding(vertical = 2.dp).basicMarquee(iterations = 10),
                                 fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,
                                 color = Color.Black
                             )

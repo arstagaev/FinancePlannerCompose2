@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Checkbox
 import androidx.compose.material.CheckboxDefaults
 import androidx.compose.material.MaterialTheme
@@ -23,19 +24,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.common.colorText
 import com.example.common.colorTextSecondary
+import com.example.common.getPlatformName
 import com.example.common.models.SaldoCell
 import com.example.common.ui.main_dashboard.actionToSaveChanges
 import com.example.common.ui.main_dashboard.addNewCell
 import com.example.common.ui.main_dashboard.isEditMode
+import com.example.common.utils.Platform
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -47,6 +54,8 @@ internal fun plusik(isIncome: Boolean = true, parentIndex: Int) {
     var isEdit = remember { mutableStateOf(false) }
     var newCellSaldo = remember { mutableStateOf<SaldoCell>(SaldoCell(amount = 0, name = "")) }
 
+    val focusRequesterAmount = remember { FocusRequester() }
+    val focusRequesterText = remember { FocusRequester() }
 
     LaunchedEffect(isEditMode.value) {
         if (!isEditMode.value && saldoStrokeAmount.value.toString().isNotEmpty() && saldoStrokeAmount.value.toString().isNotBlank()) {
@@ -67,6 +76,9 @@ internal fun plusik(isIncome: Boolean = true, parentIndex: Int) {
                 isEdit.value = false
             }
         }
+        if (isEdit.value) {
+            focusRequesterAmount.requestFocus()
+        }
     }
 
     Row(Modifier.fillMaxWidth()//.height(40.dp)
@@ -84,12 +96,21 @@ internal fun plusik(isIncome: Boolean = true, parentIndex: Int) {
                 TextField(
                     modifier = Modifier.fillMaxWidth()//.height(40.dp)
                         .background(Color.Transparent).onKeyEvent {
-                            if (it.key == Key.Enter){
+                            if (it.key == Key.Enter) {
                                 actionToSaveChanges()
                                 true
                             }
+                            if (it.key == Key.Escape) {
+                                isEdit.value = false
+                                isEditMode.value = false
+                                true
+                            }
+                            if (it.key == Key.Tab) {
+                                focusRequesterText.requestFocus()
+                                true
+                            }
                             false
-                        },
+                        }.focusRequester(focusRequesterAmount),
                     //value = newCellSaldo.value.amount.toString(),
                     value = saldoStrokeAmount.value,
                     colors = colorFields,
@@ -101,6 +122,10 @@ internal fun plusik(isIncome: Boolean = true, parentIndex: Int) {
                     },
                     label = { Text("Amount", color = colorText, fontSize = 8.sp) },
                     textStyle = TextStyle.Default.copy(fontSize = 20.sp),
+                    keyboardOptions = if (getPlatformName() == Platform.ANDROID) KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
+                    ) else KeyboardOptions.Default,
                     keyboardActions = KeyboardActions(
                         onDone = { actionToSaveChanges() },
                         onSearch = { actionToSaveChanges() },
@@ -117,11 +142,12 @@ internal fun plusik(isIncome: Boolean = true, parentIndex: Int) {
                                 true
                             }
                             if (it.key == Key.Escape) {
+                                isEdit.value = false
                                 isEditMode.value = false
                                 true
                             }
                             false
-                        },
+                        }.focusRequester(focusRequesterText),
                     value = saldoStrokeName.value ?: "",
                     colors = colorFields,
                     onValueChange = {

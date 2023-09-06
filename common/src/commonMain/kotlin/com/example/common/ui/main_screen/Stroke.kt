@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
@@ -34,11 +35,14 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.common.colorTextSecondary
+import com.example.common.getPlatformName
 import com.example.common.models.SaldoCell
 import com.example.common.ui.main_dashboard.actionToSaveChanges
 import com.example.common.ui.main_dashboard.colorCreditResult
@@ -51,6 +55,7 @@ import com.example.common.ui.main_dashboard.deleteCell
 import com.example.common.ui.main_dashboard.isEditMode
 import com.example.common.ui.main_dashboard.showTips
 import com.example.common.ui.main_dashboard.updateStroke
+import com.example.common.utils.Platform
 import com.example.common.utils.currency
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -67,7 +72,8 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
     var saldoStrokeName = remember { mutableStateOf("${saldoCell.name}") }
     var isShowRemoveIcon = remember { mutableStateOf(false) }
     // initialize focus reference to be able to request focus programmatically
-    val focusRequester = remember { FocusRequester() }
+    val focusRequesterAmount = remember { FocusRequester() }
+    val focusRequesterText = remember { FocusRequester() }
     val showTipsInternal = remember { showTips }
 
     LaunchedEffect(isEditMode.value) {
@@ -86,7 +92,7 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
             }
         }
         if (isEditLocal.value) {
-            focusRequester.requestFocus()
+            focusRequesterAmount.requestFocus()
         }
     }
     Card (
@@ -125,12 +131,17 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                                 true
                             }
                             if (it.key == Key.Escape) {
+                                isEditLocal.value = false
                                 isEditMode.value = false
+                                true
+                            }
+                            if (it.key == Key.Tab) {
+                                focusRequesterText.requestFocus()
                                 true
                             }
                             false
                         }// add focusRequester modifier
-                        .focusRequester(focusRequester)
+                        .focusRequester(focusRequesterAmount)
                     ,
                     //value = newCellSaldo.value.amount.toString(),
                     value = saldoStrokeAmount.value,
@@ -143,6 +154,13 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                     },
                     label = { Text("Amount", color = if (isIncome) colorTextDebitTitle else colorTextCreditTitle, fontSize = 8.sp) },
                     textStyle = TextStyle.Default.copy(fontSize = 20.sp, color = if (isIncome) colorTextDebitTitle else colorTextCreditTitle, fontWeight = FontWeight.Bold),
+
+                    keyboardOptions = if (getPlatformName() == Platform.ANDROID)
+                        KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done
+                        ) else
+                            KeyboardOptions.Default,
                     keyboardActions = KeyboardActions(
                         onDone = { actionToSaveChanges() },
                         onSearch = { actionToSaveChanges() },
@@ -158,8 +176,13 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                                 isEditMode.value = false
                                 true
                             }
+                            if (it.key == Key.Escape) {
+                                isEditLocal.value = false
+                                isEditMode.value = false
+                                true
+                            }
                             false
-                        },
+                        }.focusRequester(focusRequesterText),
                     value = saldoStrokeName.value ?: "",
                     colors = if (isIncome) colorFieldsDebit else colorFieldsCredit,
                     onValueChange = {

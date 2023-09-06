@@ -62,14 +62,6 @@ class RootComponent(
                     componentContext
                 )
             )
-
-            else -> {
-                IRootComponent.Child.MainDashboardChild(
-                    createItemList(
-                        componentContext
-                    )
-                )
-            }
         }
 
     private fun createItemList(componentContext: ComponentContext): MainDashboardComponent =
@@ -77,10 +69,11 @@ class RootComponent(
             componentContext = componentContext,
             onItemSelected = {
                 navigation.bringToFront(Config.PremiumAdv)
+            },
+            backToBudgets = {
+                navigation.bringToFront(Config.PremiumAdv)
             }
-        ) {
-            navigation.bringToFront(Config.PremiumAdv)
-        }
+        )
 
 //    private fun createItemDetails(componentContext: ComponentContext, config: Config.Functionality): IFunctionalityComponent =
 //        FunctionalityComponent(
@@ -94,20 +87,21 @@ class RootComponent(
             componentContext = componentContext,
             onBack = {
                 navigation.pop()
+            },
+            goToBudget = {
+                navigation.bringToFront(Config.MainDashboard)
             }
-        ) {
-            navigation.bringToFront(Config.MainDashboard)
-        }
+        )
 
 
-    private sealed class Config : Parcelable {
+    sealed class Config : Parcelable {
         @Parcelize
         object MainDashboard : Config()
 
         @Parcelize
         object PremiumAdv : Config()
 
-        @Parcelize
-        data class Functionality(val itemId: Long) : Config()
+//        @Parcelize
+//        data class Functionality(val itemId: Long) : Config()
     }
 }

@@ -14,6 +14,10 @@ repositories {
 dependencies {
     implementation(project(":common"))
     implementation("androidx.activity:activity-compose:1.5.0")
+    val decompose = "2.0.0"
+    implementation("com.arkivanov.decompose:decompose:${decompose}")
+    implementation("com.arkivanov.decompose:extensions-compose-jetbrains:${decompose}")
+
 }
 
 android {

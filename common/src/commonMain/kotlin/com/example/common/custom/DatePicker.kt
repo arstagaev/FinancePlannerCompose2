@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.common.ui.main_dashboard.configurationOfSaldo
 import com.example.common.utils.toIntSafe
 import java.util.Calendar
 
@@ -100,9 +101,9 @@ fun InfiniteItemsPicker(
     }
 }
 
-val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+val currentYear = configurationOfSaldo.value.startedDateYear //Calendar.getInstance().get(Calendar.YEAR)
 val currentDay = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
-val currentMonth = Calendar.getInstance().get(Calendar.MONTH)
+val currentMonth = configurationOfSaldo.value.startedDateMonth //Calendar.getInstance().get(Calendar.MONTH)
 
 val years = (1950..2050).map { it.toString() }
 val monthsNumber = (1..12).map { it.toString() }
