@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
@@ -38,15 +39,20 @@ import com.example.common.ui.main_screen.PlateOfMonth
 import com.example.common.ui.main_screen.forecastGhostMonth
 import com.example.common.ui.main_screen.longForecast
 import com.example.common.ui.main_screen.shimmerEffectBlue
+import com.example.common.ui.models.UiConfig
 import com.example.common.utils.generatePaybackPeriod
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import java.time.LocalDateTime
 
 val colorDebit = Color(0xFF57DE5d)//Color(68,220,96)
@@ -95,14 +101,8 @@ var saldoMode = mutableStateOf<SaldoMode>(SaldoMode.LOADING)
 
 val showTips = mutableStateOf<Boolean>(false)
 
-//fun initital() {
-//
-//    CoroutineScope(CoroutineName("Init")).launch {
-//
-//        //delay(1000L)
-//        //updateWhole()
-//    }
-//}
+val uiConfig = mutableStateOf(UiConfig(0))
+
 fun updateWhole() {
     val crtScp = CoroutineScope(CoroutineName("Update"))
     //saldoMode.value = SaldoMode.LOADING
@@ -123,12 +123,18 @@ fun updateWhole() {
         configurationOfSaldo.value.startedDateMonth,
         1
     )
-    //LocalDateTime.of(2023,1,1)
-    println("> stateFall ${stateFall.joinToString()}")
 
+    val localDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+
+    val deltaDateFromNowToStartCalc =startDate.minus(LocalDate(localDate.year,localDate.monthNumber,localDate.dayOfMonth))
+    println("Localdate DELTA: ${deltaDateFromNowToStartCalc.months} ${deltaDateFromNowToStartCalc.days} ${deltaDateFromNowToStartCalc.years}")
+    uiConfig.value = uiConfig.value.copy(currentMonthInList = (deltaDateFromNowToStartCalc.months+(deltaDateFromNowToStartCalc.years * 12)))
+    if (uiConfig.value.currentMonthInList < 0) {
+        uiConfig.value = uiConfig.value.copy(currentMonthInList = uiConfig.value.currentMonthInList * -1)
+    }
 
     /**
-        in initial launch of app , when empty
+    *    in initial launch of app , when empty
     */
 
     if (stateFall.isEmpty()) {
@@ -249,7 +255,6 @@ fun updateWhole() {
         saveNewBudgetJSON()
         println("<===========================")
     }
-
 }
 
 internal fun updateStroke(oldSaldo: SaldoCell, newSaldoCell: SaldoCell, parentIndex: Int, isIncome: Boolean) {
@@ -277,7 +282,6 @@ internal fun updateStroke(oldSaldo: SaldoCell, newSaldoCell: SaldoCell, parentIn
         }
         stateFall[parentIndex].expenses.sortedBy { it.amount }
     }
-
 }
 
 private fun addNewSaldo() {
@@ -410,6 +414,7 @@ fun BudgetScreen(component: MainDashboardComponent) {
         stateFall
     )
     val paybackPeriod_Internal = remember { paybackPeriod }
+    var config = remember { uiConfig }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -496,26 +501,34 @@ fun BudgetScreen(component: MainDashboardComponent) {
                         Box(modifier = Modifier.fillMaxSize().clickable {
                             showTips.value = !showTips.value
                         }) {
-                            Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.Info, contentDescription = "Settings")
+                            Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.Info, contentDescription = "Info")
                         }
                     }
                 }
             }
-
-            Card(modifier = Modifier.size(60.dp).padding(10.dp), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
-                Box(modifier = Modifier.fillMaxSize().clickable {
-                    if (saldoMode.value == SaldoMode.SHOW) {
-                        saldoMode.value = SaldoMode.SETUP_SETTINGS
-                    } else {
-                        updateWhole()
-                        saldoMode.value = SaldoMode.SHOW
+            if (isAtStart) {
+                Card(
+                    modifier = Modifier.size(60.dp).padding(10.dp),
+                    elevation = 15.dp,
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Box(modifier = Modifier.fillMaxSize().clickable {
+                        if (saldoMode.value == SaldoMode.SHOW) {
+                            saldoMode.value = SaldoMode.SETUP_SETTINGS
+                        } else {
+                            updateWhole()
+                            saldoMode.value = SaldoMode.SHOW
+                        }
+                    }) {
+                        Icon(
+                            modifier = Modifier.align(Alignment.Center),
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = "Settings"
+                        )
                     }
-                }) {
-                    Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.Settings, contentDescription = "Settings")
                 }
             }
-
-            if (isAtStart) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Card(modifier = Modifier.size(60.dp).padding(10.dp), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
                     Box(modifier = Modifier.fillMaxSize().clickable {
                         configurationOfSaldo.value = SaldoConfiguration(
@@ -531,30 +544,61 @@ fun BudgetScreen(component: MainDashboardComponent) {
 //                            isEditMode.value = false
 //                            showTips.value = false
                     }) {
-                        Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.ArrowBack, contentDescription = "Settings")
+                        Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+                Card(modifier = Modifier.size(60.dp).padding(10.dp), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
+                    Box(modifier = Modifier.fillMaxSize().clickable {
+                        crtcxt.launch {
+                            lazyListState.scrollToItem(config.value.currentMonthInList)
+                        }
+                    }) {
+                        Icon(modifier = Modifier.align(Alignment.Center),imageVector = Icons.Filled.DateRange, contentDescription = "Now")
                     }
                 }
             }
 
+
+
+
 //            Row(modifier = Modifier, horizontalArrangement = Arrangement.SpaceBetween) {}
         }
 
-
-
-        Card(modifier = Modifier.width(250.dp)
-            .height(65.dp).padding(10.dp).align(Alignment.BottomCenter), elevation = 15.dp, shape = RoundedCornerShape(14.dp)) {
-            Row(modifier = Modifier.fillMaxSize().background(Color.White).clickable {
-                if (saldoMode.value == SaldoMode.SHOW) {
-                    saldoMode.value = SaldoMode.SETUP_SETTINGS
-                } else {
-                    saldoMode.value = SaldoMode.SHOW
+        if (isAtStart) {
+            Card(
+                modifier = Modifier.width(250.dp)
+                    .height(65.dp).padding(10.dp).align(Alignment.BottomCenter),
+                elevation = 15.dp,
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxSize().background(Color.White).clickable {
+                        if (saldoMode.value == SaldoMode.SHOW) {
+                            saldoMode.value = SaldoMode.SETUP_SETTINGS
+                        } else {
+                            saldoMode.value = SaldoMode.SHOW
+                        }
+                    },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    Text(
+                        modifier = Modifier.padding(4.dp),
+                        text = "Payback period:",
+                        color = Color.Black,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        modifier = Modifier.padding(4.dp),
+                        text = paybackPeriod_Internal.value,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.body1
+                    )
                 }
-            }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceAround) {
-                Text(modifier = Modifier.padding(4.dp), text = "Payback period:", color= Color.Black, textAlign = TextAlign.Center)
-                Text(modifier = Modifier.padding(4.dp), text = paybackPeriod_Internal.value, color= Color.Black, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,style = MaterialTheme.typography.body1)
             }
         }
-
 //        Row(modifier = positionTips.value.modifier.align(Alignment.TopStart), horizontalArrangement = Arrangement.SpaceEvenly) {
 //            Text("\uD83D\uDC46", fontSize = 50.sp)
 //            Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.SpaceBetween) {

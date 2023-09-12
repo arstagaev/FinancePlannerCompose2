@@ -226,7 +226,7 @@ fun strokeAgregator(saldoCell: SaldoCell, parentIndex: Int, index: Int, isIncome
                     withStyle(SpanStyle(color = if (isIncome) colorDebitResult else colorCreditResult, fontWeight = FontWeight.Bold)) {
                         append("${saldoCell.amount}".currency())
                     }
-                    withStyle(SpanStyle(color = Color.LightGray)) {
+                    withStyle(SpanStyle(color = Color.Gray)) {
                         append("\n" + "${saldoCell.name}")
                     }
                 }

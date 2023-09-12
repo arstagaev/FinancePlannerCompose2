@@ -87,7 +87,7 @@ fun forecastGhostMonth(
                     }
                 }
                 // SUMMA:
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.SpaceBetween) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
                     Row(modifier = Modifier.fillMaxWidth().background(colorDebitResult)) {
                         Text("Σ Income:"+"${futureSaldo.value?.income}", modifier = Modifier.padding(vertical = 2.dp),
                             fontFamily = FontFamily.Default, fontSize = 10.sp, fontWeight = FontWeight.Bold,textAlign = TextAlign.Center,

@@ -18,7 +18,7 @@ data class SaldoConfiguration(
 )
 
 @Serializable
-data class SaldoCell(var amount: Int, var name: String = "", var isConst: Boolean = false)
+data class MonthSaldo(var incomes: ArrayList<SaldoCell>, var expenses: ArrayList<SaldoCell>)
 
 @Serializable
-data class MonthSaldo(var incomes: ArrayList<SaldoCell>, var expenses: ArrayList<SaldoCell>)
+data class SaldoCell(var amount: Int, var name: String = "", var isConst: Boolean = false)

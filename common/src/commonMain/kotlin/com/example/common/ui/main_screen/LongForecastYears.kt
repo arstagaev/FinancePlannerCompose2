@@ -1,5 +1,6 @@
 package com.example.common.ui.main_screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Card
@@ -12,38 +13,47 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.common.colorCard
 import com.example.common.enums.SaldoMode
 import com.example.common.ui.main_dashboard.futureFall
 import com.example.common.ui.main_dashboard.saldoMode
+import com.example.common.utils.currency
 
 @Composable
 fun longForecast() {
     var futureSaldo = remember { futureFall }
     val text1 = buildAnnotatedString {
-        withStyle(SpanStyle(color = Color.Blue)) {
+        withStyle(SpanStyle(color = Color.White)) {
             append("After half of year:")
         }
-        append("\n" + "${futureSaldo.value?.periodHalfYear}")
+        withStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.Bold)) {
+            append("\n" + "${futureSaldo.value?.periodHalfYear}".currency())
+        }
     }
     val text2 = buildAnnotatedString {
-        withStyle(SpanStyle(color = Color.Blue)) {
+        withStyle(SpanStyle(color = Color.White)) {
             append("After 1 year:")
         }
-        append("\n" + "${futureSaldo.value?.periodFirstYear}")
+        withStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.Bold)) {
+            append("\n" + "${futureSaldo.value?.periodFirstYear}".currency())
+        }
     }
     val text3 = buildAnnotatedString {
-        withStyle(SpanStyle(color = Color.Blue)) {
+        withStyle(SpanStyle(color = Color.White)) {
             append("After 2 years:")
         }
-        append("\n" + "${futureSaldo.value?.periodSecondYear}")
+        withStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.Bold)) {
+            append("\n" + "${futureSaldo.value?.periodSecondYear}".currency())
+        }
     }
     var saldoModeInternal = remember { saldoMode }
 
-    Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
+    Column(Modifier.fillMaxHeight().padding(end = 50.dp), verticalArrangement = Arrangement.SpaceBetween) {
 
         Card(
             modifier = Modifier
@@ -57,11 +67,11 @@ fun longForecast() {
                 Box(Modifier.fillMaxSize().shimmerEffect())
                 return@Card
             }
-            Box(Modifier.fillMaxSize()) {
+            Box(Modifier.fillMaxSize().background(colorCard)) {
                 Text(text1,
                     modifier = Modifier.padding(4.dp).align(Alignment.Center)
                         .clickable {},
-                    fontSize = 20.sp, fontFamily = FontFamily.Monospace,
+                    fontSize = 20.sp, fontFamily = FontFamily.Default,
                     //color = Color.Black,
                     textAlign = TextAlign.Center
                 )
@@ -80,11 +90,11 @@ fun longForecast() {
                 Box(Modifier.fillMaxSize().shimmerEffect())
                 return@Card
             }
-            Box(Modifier.fillMaxSize()) {
+            Box(Modifier.fillMaxSize().background(colorCard)) {
                 Text(text2,
                     modifier = Modifier.padding(4.dp).align(Alignment.Center)
                         .clickable {},
-                    fontSize = 20.sp, fontFamily = FontFamily.Monospace,
+                    fontSize = 20.sp, fontFamily = FontFamily.Default,
                     color = Color.Black, textAlign = TextAlign.Center
                 )
             }
@@ -102,11 +112,11 @@ fun longForecast() {
                 Box(Modifier.fillMaxSize().shimmerEffect())
                 return@Card
             }
-            Box(Modifier.fillMaxSize()) {
+            Box(Modifier.fillMaxSize().background(colorCard)) {
                 Text(text3,
                     modifier = Modifier.padding(4.dp).align(Alignment.Center)
                         .clickable {},
-                    fontSize = 20.sp, fontFamily = FontFamily.Monospace,
+                    fontSize = 20.sp, fontFamily = FontFamily.Default,
                     color = Color.Black, textAlign = TextAlign.Center
                 )
             }

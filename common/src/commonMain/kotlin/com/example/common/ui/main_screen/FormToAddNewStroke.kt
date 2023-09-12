@@ -31,6 +31,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -121,7 +122,7 @@ internal fun plusik(isIncome: Boolean = true, parentIndex: Int) {
                         }
                     },
                     label = { Text("Amount", color = colorText, fontSize = 8.sp) },
-                    textStyle = TextStyle.Default.copy(fontSize = 20.sp),
+                    textStyle = TextStyle.Default.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold),
                     keyboardOptions = if (getPlatformName() == Platform.ANDROID) KeyboardOptions(
                         keyboardType = KeyboardType.Number,
                         imeAction = ImeAction.Done
