@@ -1,8 +1,9 @@
 package com.example.common.utils
 
 import com.example.common.ui.main_dashboard.configurationOfSaldo
-import java.text.NumberFormat
-import java.util.Locale
+import java.math.RoundingMode
+import java.text.DecimalFormat
+import kotlin.math.abs
 
 
 fun String.toIntSafe() =
@@ -16,8 +17,19 @@ fun String.currency() : String {
 //        val formatter: NumberFormat = NumberFormat.getCurrencyInstance(Locale.US).also {
 //            it.maximumFractionDigits = 0
 //        }
-        val nf = NumberFormat.getInstance(Locale("sk", "SK"))
-        nf.isGroupingUsed = true
+//        val nf = NumberFormat.getInstance(Locale("sk", "SK")) as DecimalFormat
+//        nf.isGroupingUsed = true
+//        nf.applyPattern("#,###")
+
+        val nf = DecimalFormat("#,###.##")
+        val num = this.toDouble()
+
+        return when {
+            abs(num) >= 1000000000 -> String.format("%.3fB", num / 1000000000.0)
+            abs(num) >= 1_000_000 -> String.format("%.3fM", num / 1000000.0)
+            abs(num) >= 100_000 -> String.format("%.2fK", num / 1000.0)
+            else -> num.toString()
+        } + configurationOfSaldo.value.currentCurrency
 
         return nf.format(this.toDouble()) + configurationOfSaldo.value.currentCurrency
     } else {
@@ -25,3 +37,5 @@ fun String.currency() : String {
     }
 
 }
+
+//fun Double.toCompact() : String

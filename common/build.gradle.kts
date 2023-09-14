@@ -1,4 +1,5 @@
 import org.jetbrains.compose.compose
+import com.arstagaev.gradle.Deps
 
 plugins {
     kotlin("multiplatform")
@@ -31,6 +32,11 @@ kotlin {
                 implementation("com.arkivanov.decompose:decompose:${decompose}")
                 implementation("com.arkivanov.decompose:extensions-compose-jetbrains:${decompose}")
 
+                implementation(Deps.Coroutines.core)
+                implementation(Deps.Ktor.core)
+                implementation(Deps.Ktor.clientContentNegotiation)
+                implementation(Deps.Ktor.serializationKotlinxJson)
+                implementation(Deps.Ktor.clientLogging)
             }
         }
         val commonTest by getting {
