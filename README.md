@@ -1,4 +1,4 @@
-# KMM Finance Planner
+# KMM Finance Planner (Now in Developing)
 
 
 <table style= padding:10px">
